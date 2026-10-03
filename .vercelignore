@@ -1,0 +1,9 @@
+# Never upload these to Vercel (the CLI does NOT read .gitignore)
+ADMIN-SECRETS*.txt
+*.txt
+.env*
+.vercel
+node_modules
+scripts
+README.md
+*.qr.png
