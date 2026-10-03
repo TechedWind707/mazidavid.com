@@ -4,7 +4,7 @@ import { createHmac } from "node:crypto";
 const txt = readFileSync("ADMIN-SECRETS.txt", "utf8");
 const get = (k) => txt.match(new RegExp(`^${k}=(.*)$`, "m"))?.[1] ?? txt.match(new RegExp(`${k}:\\s+(\\S+)`))?.[1];
 const PW = get("Password"), TOTP = get("ADMIN_TOTP_SECRET");
-const B = "http://localhost:3000", O = { Origin: B, "Content-Type": "application/json" };
+const B = process.env.BASE || "http://localhost:3000", O = { Origin: process.env.ORIGIN || B, "Content-Type": "application/json" };
 const b32 = (s) => { const a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"; let bits = ""; for (const c of s) bits += a.indexOf(c).toString(2).padStart(5, "0"); const out = []; for (let i = 0; i + 8 <= bits.length; i += 8) out.push(parseInt(bits.slice(i, i + 8), 2)); return Buffer.from(out); };
 const code = () => { const m = Buffer.alloc(8); m.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30000))); const h = createHmac("sha1", b32(TOTP)).update(m).digest(); const o = h[19] & 15; return String((((h[o] & 127) << 24) | (h[o+1] << 16) | (h[o+2] << 8) | h[o+3]) % 1e6).padStart(6, "0"); };
 const j = async (p, opt = {}) => { const r = await fetch(B + p, opt); return [r.status, await r.json().catch(() => null), r.headers.get("set-cookie")]; };
