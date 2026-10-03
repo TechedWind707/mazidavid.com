@@ -3,309 +3,320 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mazi David, unfiltered</title>
-<meta name="description" content="The personal side of Mazi David: what he's aiming at, half-formed ideas and the crazier stuff.">
+<title>Mazi David · the person</title>
+<meta name="description" content="Who Mazi David is: what he builds, how he got here, and a board of what he's thinking about right now.">
+<meta property="og:title" content="Mazi David · the person">
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css">
+<link rel="stylesheet" href="/assets/board.css">
+<script src="/assets/eco-nav.js" data-current="me" data-default="dark"></script>
 <style>
 /* =====================================================================
-   ME (me.mazidavid.com) — the personal side, "the crazier side".
-   A middle point between two concepts from design-concepts/:
-     FIELD NOTES (personal-2): notebook masthead, dated entries, tidy log
-     NOTICEBOARD (personal-5): pinned + taped cards at angles, draggable
-   Re-done in your palette: a BLACK board, WHITE paper notes, GOLD tape
-   and pins, OLIVE for build notes, and ROSE only on the "who" pins.
-   Interactions: drag notes, "shake the board", filter by kind.
-
-   DATA: notes now come from /api/board (you write them at
-   work.mazidavid.com/admin, in markdown, with blog posts / photos
-   attached as "tags"). content.js notes are the offline fallback.
-   Visitors can leave a note at the bottom; it only appears after you
-   approve it in /admin.
+   ME (me.mazidavid.com): the first place people meet the person.
+   Order, top to bottom:
+     1. HELLO     photo (if set in /admin), who I am, a line that types
+                  out the things I build, links (Linktree first)
+     2. BOARD     zoomable notes with connecting lines (board.js);
+                  visitors can drag/react, a reload restores my layout
+     3. TIMELINE  how I got here, revealed as you scroll
+     4. WALL      visitors' notes (shown after I approve them)
+   Everything comes from /api/board (edited at work.mazidavid.com/admin),
+   with content.js as the offline fallback.
    ===================================================================== */
-.mast{padding:56px 0 22px; display:grid; grid-template-columns:1fr auto; gap:20px; align-items:end}
-.mast h1{font-size:clamp(42px,6.5vw,76px)}
-.mast h1 .scribble{font-family:var(--hand); font-weight:700; color:var(--gold); font-size:.8em; display:inline-block; transform:rotate(-4deg) translateY(-4px); margin-left:6px}
-.mast p{color:var(--muted-dark); max-width:56ch; margin:12px 0 0}
-.mast .entry{font:500 12.5px var(--mono); color:var(--muted-dark); text-align:right; line-height:1.8}
 
-.tabs{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:8px 0 18px}
-.tabs button{font:500 14px var(--sans); display:inline-flex; gap:8px; align-items:center; padding:8px 15px; border-radius:var(--r-pill); border:1px solid var(--line-dark); background:var(--surface-dark); cursor:pointer; color:var(--white)}
-.tabs button i{width:9px; height:9px; border-radius:50%; background:var(--c)}
-.tabs button.on{background:var(--white); color:var(--black); border-color:var(--white)}
-.tabs .room{font:500 13px var(--mono); color:var(--muted-dark); border:1px dashed var(--line-dark); padding:7px 14px; border-radius:var(--r-pill)}
-.tabs .shake{margin-left:auto}
+/* ---------- 1. hello ---------- */
+.hello{display:grid; grid-template-columns:auto 1fr; gap:44px; align-items:center; padding:70px 0 40px}
+.hello.nophoto{grid-template-columns:1fr}
+.portrait{width:min(300px,70vw); aspect-ratio:4/5; border-radius:40% 40% var(--r-xl) var(--r-xl); overflow:hidden; position:relative;
+  box-shadow:0 0 0 6px var(--bg), 0 0 0 8px var(--gold), var(--shadow-lift); transform:rotate(-2deg)}
+.portrait img{width:100%; height:100%; object-fit:cover}
+.hello h1{font-size:clamp(40px,6vw,74px); max-width:16ch}
+.hello h1 .scribble{font-family:var(--hand); font-weight:700; color:var(--accent-fg); font-size:.8em; display:inline-block; transform:rotate(-4deg)}
+.typed{font:500 clamp(20px,2.4vw,28px)/1.3 var(--serif); margin:18px 0 0; min-height:1.3em}
+.typed b{color:var(--accent-fg); font-weight:600; border-right:3px solid var(--gold); padding-right:4px; animation:caret .9s steps(1) infinite}
+@keyframes caret{50%{border-color:transparent}}
+.bio{color:var(--fg-2); font-size:17.5px; max-width:60ch; margin:18px 0 0}
+.links{display:flex; flex-wrap:wrap; gap:10px; margin-top:22px}
+.links a{display:inline-flex; gap:8px; align-items:center; padding:9px 15px; border-radius:var(--r-pill); border:1px solid var(--hair); background:var(--surface); text-decoration:none; font:500 14px var(--sans); transition:border-color .2s, transform .2s}
+.links a:hover{border-color:var(--gold); transform:translateY(-2px)}
+.links a.lt{background:var(--gold); border-color:var(--gold); color:var(--black); font-weight:600}
 
-/* the board: near-black with a faint gold dot grid */
-.board{position:relative; min-height:640px; border-radius:var(--r-xl); border:1px solid var(--line-dark);
-  background:radial-gradient(circle, rgba(209,169,10,.18) 1px, transparent 1.6px) 0 0/22px 22px, #121210;
-  overflow:hidden; touch-action:none}
+/* ---------- section heads ---------- */
+.sec{margin-top:70px}
+.sec-head{display:flex; flex-wrap:wrap; gap:12px 20px; align-items:end; justify-content:space-between; margin-bottom:16px}
+.sec-head h2{font-size:clamp(30px,4vw,42px)}
+.sec-head p{color:var(--fg-2); margin:8px 0 0; max-width:62ch}
 
-.note{position:absolute; width:270px; padding:20px 18px 14px; background:var(--white); color:var(--black); border-radius:var(--r-lg);
-  box-shadow:0 18px 36px -18px rgba(0,0,0,.8); cursor:grab; user-select:none; transform:rotate(var(--rot)); transition:box-shadow .2s, opacity .25s, filter .25s}
-.note:active{cursor:grabbing}
-.note.dragging{transition:none; z-index:300 !important; box-shadow:0 30px 50px -18px rgba(0,0,0,.9)}
-.note .k{font:500 11px var(--mono); text-transform:uppercase; letter-spacing:.08em; color:var(--muted); display:flex; gap:7px; align-items:center}
-.note .k::before{content:""; width:8px; height:8px; border-radius:50%; background:var(--c)}
-.note h3{font:600 21px/1.15 var(--serif); margin:6px 0}
-/* Markdown inside a note (rendered by marked, cleaned by DOMPurify) */
-.note.wide{width:360px}
-.md{font-size:15px; line-height:1.5; overflow-wrap:anywhere}
-.md > :first-child{margin-top:0} .md > :last-child{margin-bottom:0}
-.md p{margin:0 0 8px}
-.md h1,.md h2,.md h3{font:600 17px/1.2 var(--serif); margin:10px 0 6px}
-.md ul,.md ol{margin:4px 0 8px; padding-left:20px}
-.md li{margin:2px 0}
-.md a{color:var(--olive-deep); text-decoration-thickness:1.5px; text-underline-offset:2px}
-.md code{font:500 13px var(--mono); background:var(--paper-2); padding:1px 5px; border-radius:6px}
-.md pre{background:var(--black); color:var(--white); padding:10px 12px; border-radius:var(--r-sm); overflow:auto; font:13px/1.45 var(--mono)}
-.md pre code{background:none; padding:0; color:inherit}
-.md blockquote{margin:6px 0; padding:2px 0 2px 12px; border-left:3px solid var(--gold); color:var(--muted)}
-.md img{border-radius:var(--r-sm); margin:6px 0}
-.md hr{border:0; border-top:1px dashed var(--line); margin:10px 0}
-.md input[type=checkbox]{margin-right:6px}
-.note.aim .md a{color:var(--black)}
-/* Attached blog posts / photos / links */
-.att{display:grid; gap:8px; margin-top:10px}
-.att a{display:flex; gap:10px; align-items:center; text-decoration:none; color:inherit; border:1px solid var(--line); border-radius:var(--r-md); padding:6px; background:var(--paper-2); transition:border-color .2s}
-.att a:hover{border-color:var(--olive)}
-.att img{width:54px; height:54px; object-fit:cover; border-radius:10px; flex:none; background:var(--line)}
-.att .t{font:500 13.5px/1.3 var(--sans)}
-.att .t small{display:block; font:500 10.5px var(--mono); text-transform:uppercase; letter-spacing:.06em; color:var(--muted)}
-.att a.photo{padding:0; border:0; display:block; background:none}
-.att a.photo img{width:100%; height:150px; border-radius:var(--r-md)}
-.note.aim .att a{background:rgba(255,255,255,.55); border-color:transparent}
-.note .d{font:500 11.5px var(--mono); color:var(--muted); margin-top:10px; display:flex; justify-content:space-between}
-.note .d a{color:var(--olive-deep)}
-/* pin */
-.note::before{content:""; position:absolute; top:-6px; left:50%; width:14px; height:14px; margin-left:-7px; border-radius:50%; background:var(--c); box-shadow:0 2px 3px rgba(0,0,0,.45)}
-/* THINK: gold masking tape instead of a pin */
-.note.think::before{width:76px; height:20px; margin-left:-38px; top:-9px; border-radius:3px; background:rgba(209,169,10,.78); box-shadow:none; transform:rotate(-3deg)}
-/* AIM: inverted, gold card */
-.note.aim{background:var(--gold)}
-.note.aim .k,.note.aim .d{color:#3b3000}
-/* WHO: handwriting */
-.note.who .md{font-family:var(--hand); font-size:25px; line-height:1.1}
-.note.dim{opacity:.15; filter:grayscale(1)}
+/* ---------- 2. board ---------- */
+.kinds{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px}
+.kinds button{display:inline-flex; gap:7px; align-items:center; font:500 13.5px var(--sans); padding:7px 13px; border-radius:var(--r-pill); border:1px solid var(--hair); background:var(--surface); color:var(--fg); cursor:pointer}
+.kinds button i{width:9px; height:9px; border-radius:50%; background:var(--c,var(--fg))}
+.kinds button.on{background:var(--fg); color:var(--bg); border-color:var(--fg)}
+.viewtoggle{font:500 13px var(--mono); background:none; border:1px dashed var(--hair); color:var(--fg-2); padding:7px 13px; border-radius:var(--r-pill); cursor:pointer}
+.bd .bd-node.filtered{opacity:.12; filter:grayscale(1)}
+.listview{display:none; gap:12px}
+.listview.on{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.listview .bd-node{position:relative; transform:none; left:auto; top:auto; width:auto !important}
 
-.k-aim{--c:var(--black)} .k-think{--c:var(--gold)} .k-build{--c:var(--olive)} .k-look{--c:var(--gold)} .k-who{--c:var(--rose)}
-.tabs .k-aim{--c:var(--gold)}   /* on the dark tab bar, show aim as gold */
+/* ---------- 3. timeline ---------- */
+.tl{position:relative; padding:20px 0 10px}
+.tl::before,.tl .fill{content:""; position:absolute; left:50%; top:0; width:3px; margin-left:-1.5px; border-radius:3px}
+.tl::before{bottom:0; background:var(--hair)}
+.tl .fill{height:var(--p,0%); background:linear-gradient(var(--gold), var(--rose)); transition:height .15s linear}
+.ti{position:relative; display:grid; grid-template-columns:1fr 1fr; gap:60px; margin:0 0 54px}
+.ti::before{content:""; position:absolute; left:50%; top:22px; width:16px; height:16px; margin-left:-8px; border-radius:50%; background:var(--bg); border:3px solid var(--hair); z-index:1; transition:border-color .4s, background .4s, transform .4s}
+.ti.in::before{border-color:var(--gold); background:var(--gold); transform:scale(1.15)}
+.ti .txt{grid-column:1; text-align:right; opacity:0; transform:translateX(-30px); transition:opacity .7s, transform .7s cubic-bezier(.2,.8,.2,1)}
+.ti .pic{grid-column:2; opacity:0; transform:translateX(30px) rotate(2deg); transition:opacity .8s .1s, transform .8s .1s cubic-bezier(.2,.8,.2,1)}
+.ti:nth-child(odd of .ti) .txt{grid-column:2; grid-row:1; text-align:left; transform:translateX(30px)}
+.ti:nth-child(odd of .ti) .pic{grid-column:1; grid-row:1; justify-self:end; transform:translateX(-30px) rotate(-2deg)}
+.ti.in .txt,.ti.in .pic{opacity:1; transform:none}
+.ti .when{font:500 12.5px var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--accent-fg)}
+.ti h3{font:500 clamp(22px,2.6vw,30px)/1.15 var(--serif); margin:6px 0 8px}
+.ti p{margin:0; color:var(--fg-2); font-size:16.5px}
+.ti .pic img{width:min(360px,100%); border-radius:var(--r-xl); box-shadow:var(--shadow-lift)}
+.ti.now h3{color:var(--accent-fg)}
+.ti.now .txt p::after{content:" →"; color:var(--accent-fg)}
 
-/* tidy log */
-.log{margin-top:50px}
-.log h2{font-size:28px; margin-bottom:12px}
-.row{display:grid; grid-template-columns:120px 16px 1fr auto; gap:14px; align-items:baseline; padding:12px 4px; border-bottom:1px solid var(--line-dark)}
-.row .d{font:500 12.5px var(--mono); color:var(--muted-dark)}
-.row .dot{width:9px; height:9px; border-radius:50%; background:var(--c); align-self:center}
-.row.k-aim .dot{background:var(--gold)}
-.row b{font:500 18px var(--serif)}
-.row .t{color:var(--muted-dark); font-size:14.5px}
-.row .kind{font:500 11.5px var(--mono); text-transform:uppercase; color:var(--muted-dark)}
-
-/* ---------- the guestbook (visitors' notes) ---------- */
-.guest{margin-top:56px; display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:28px; align-items:start}
-.guest h2{font-size:28px; margin:0 0 6px}
-.guest .sub{color:var(--muted-dark); margin:0 0 18px}
+/* ---------- 4. wall ---------- */
+.guest{display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:28px; align-items:start}
 .wall{display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:16px}
-.vnote{position:relative; background:var(--rose); color:var(--black); border-radius:var(--r-lg); padding:18px 16px 12px; transform:rotate(var(--rot,0deg)); box-shadow:0 14px 28px -18px rgba(0,0,0,.8)}
-.vnote:nth-child(3n+2){background:var(--white)} .vnote:nth-child(3n){background:var(--gold)}
-.vnote::before{content:""; position:absolute; top:-6px; left:50%; margin-left:-6px; width:12px; height:12px; border-radius:50%; background:var(--black); box-shadow:0 2px 3px rgba(0,0,0,.4)}
+.vnote{position:relative; background:var(--rose); color:var(--black); border-radius:var(--r-lg); padding:18px 16px 12px; transform:rotate(var(--rot,0deg)); box-shadow:0 14px 28px -18px rgba(0,0,0,.6)}
+.vnote:nth-child(3n+2){background:#fff; border:1px solid var(--hair)} .vnote:nth-child(3n){background:var(--gold)}
+.vnote::before{content:""; position:absolute; top:-6px; left:50%; margin-left:-6px; width:12px; height:12px; border-radius:50%; background:var(--black)}
 .vnote p{margin:0; font:500 22px/1.15 var(--hand); white-space:pre-wrap; overflow-wrap:anywhere}
 .vnote .by{display:block; margin-top:10px; font:500 11.5px var(--mono); color:#3a3a34}
-.wall .empty{color:var(--muted-dark); font-style:italic}
-.leave{background:var(--surface-dark); border:1px solid var(--line-dark); border-radius:var(--r-xl); padding:22px; position:sticky; top:80px}
+.wall .empty{color:var(--fg-2); font-style:italic}
+.leave{background:var(--surface); border:1px solid var(--hair); border-radius:var(--r-xl); padding:22px; position:sticky; top:24px}
 .leave h3{font:500 22px var(--serif); margin:0 0 4px}
-.leave p{color:var(--muted-dark); font-size:14px; margin:0 0 14px}
+.leave p{color:var(--fg-2); font-size:14px; margin:0 0 14px}
 .leave label{display:grid; gap:6px; font:600 13px var(--sans); margin-bottom:12px}
-.leave input,.leave textarea{font:16px var(--sans); padding:11px 13px; border-radius:var(--r-md); border:1px solid var(--line-dark); background:var(--black); color:var(--white); resize:vertical}
+.leave input,.leave textarea{font:16px var(--sans); padding:11px 13px; border-radius:var(--r-md); border:1px solid var(--hair); background:var(--bg); color:var(--fg); resize:vertical}
 .leave input:focus,.leave textarea:focus{outline:2px solid var(--gold); border-color:var(--gold)}
-.leave .count{font:500 12px var(--mono); color:var(--muted-dark); text-align:right; margin-top:-6px}
+.leave .count{font:500 12px var(--mono); color:var(--fg-2); text-align:right; margin-top:-6px}
 .leave .hp{position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden}   /* honeypot: hidden from humans */
 .leave .msg{min-height:20px; margin:10px 0 0; font-size:14px}
-.leave .msg.ok{color:var(--gold)} .leave .msg.err{color:var(--rose)}
+.leave .msg.ok{color:var(--olive-fg)} .leave .msg.err{color:var(--rose-fg)}
 
 @media (max-width:900px){ .guest{grid-template-columns:1fr} .leave{position:static} }
 @media (max-width:760px){
-  .mast{grid-template-columns:1fr} .mast .entry{text-align:left}
-  .board{min-height:0; padding:26px 16px; display:flex; flex-direction:column; gap:22px; touch-action:auto}
-  .note,.note.wide{position:relative; width:auto; left:auto !important; top:auto !important; transform:none}
-  .tabs .shake{display:none}
-  .row{grid-template-columns:16px 1fr} .row .d,.row .kind{display:none}
+  .hello{grid-template-columns:1fr; gap:26px; padding-top:44px}
+  .portrait{width:200px}
+  .tl::before,.tl .fill{left:9px}
+  .ti{grid-template-columns:1fr; gap:14px; padding-left:36px}
+  .ti::before{left:9px}
+  .ti .txt,.ti:nth-child(odd of .ti) .txt{grid-column:1; grid-row:1; text-align:left; transform:translateY(20px)}
+  .ti .pic,.ti:nth-child(odd of .ti) .pic{grid-column:1; grid-row:2; justify-self:start; transform:translateY(20px)}
 }
 </style>
 </head>
-<body class="dark">
-<script src="/assets/eco-nav.js" data-current="me"></script>
+<body>
 
 <main class="wrap">
-  <header class="mast">
+  <!-- 1. HELLO -->
+  <section class="hello nophoto" id="hello">
+    <div class="portrait" id="portrait" hidden></div>
     <div>
-      <p class="eyebrow">Field notes · the personal side</p>
-      <h1 class="h-serif">Mazi David, <span class="scribble">unfiltered</span></h1>
-      <p>Not the resume (that's <a href="https://work.mazidavid.com" style="color:var(--gold)">work.mazidavid.com</a>). This is the board above my desk: what I'm aiming at, ideas that aren't finished, whatever I'm into. Move things around. Nothing here has to be finished, it just has to be dated.</p>
+      <p class="eyebrow">me.mazidavid.com · the person</p>
+      <h1 class="h-serif" id="greeting">Hi, I'm David. <span class="scribble">Mazi</span> to most people.</h1>
+      <p class="typed" aria-live="off">I build <b id="typed"></b></p>
+      <p class="bio" id="bio"></p>
+      <div class="links" id="links"></div>
     </div>
-    <div class="entry" id="entry"></div>
-  </header>
+  </section>
 
-  <div class="tabs" id="tabs"></div>
-  <div class="board" id="board" aria-label="Pinned notes"></div>
+  <!-- 2. BOARD -->
+  <section class="sec" id="board-sec">
+    <div class="sec-head">
+      <div>
+        <h2 class="h-serif">The board</h2>
+        <p>Aims, questions, rants, videos I'm watching and whatever I'm hyperfixated on right now. Drag notes around, zoom in, click one to see what it connects to. React if something hits. Reload and everything snaps back to where I pinned it.</p>
+      </div>
+      <button class="viewtoggle" id="viewtoggle" type="button">List view</button>
+    </div>
+    <div class="kinds" id="kinds"></div>
+    <div id="board" aria-label="Board of notes"></div>
+    <div class="listview" id="listview"></div>
+  </section>
 
-  <!-- Visitors' wall. Notes are held for approval before they appear. -->
-  <section class="guest" id="guestbook">
+  <!-- 3. TIMELINE -->
+  <section class="sec" id="timeline-sec">
+    <div class="sec-head"><div><h2 class="h-serif">How I got here</h2><p>From Lagos to Dartmouth, one exam at a time.</p></div></div>
+    <div class="tl" id="tl"><div class="fill"></div></div>
+  </section>
+
+  <!-- 4. WALL -->
+  <section class="sec guest" id="guestbook">
     <div>
-      <h2 class="h-serif">Leave a note on the wall</h2>
-      <p class="sub">Say hi, drop an idea, tell me what to build next. I read every one; approved notes show up here.</p>
+      <div class="sec-head"><div><h2 class="h-serif">Leave a note on the wall</h2><p>Say hi, drop an idea, tell me what to build next. I read every one; approved notes show up here.</p></div></div>
       <div class="wall" id="wall"></div>
     </div>
     <form class="leave" id="leave" novalidate>
       <h3>Pin a note</h3>
       <p>Plain text, up to 500 characters, no links. It appears after I approve it.</p>
-      <label>Your name <small style="font-weight:400;color:var(--muted-dark)">(optional)</small>
+      <label>Your name <small style="font-weight:400;color:var(--fg-2)">(optional)</small>
         <input name="name" maxlength="40" autocomplete="nickname" placeholder="Anonymous">
       </label>
       <label>Your note
         <textarea name="body" rows="4" maxlength="500" required placeholder="Write something nice (or useful)…"></textarea>
       </label>
       <div class="count" id="count">0 / 500</div>
-      <!-- Honeypot: invisible to people, tempting to bots -->
       <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
       <button class="btn gold" type="submit">Pin it</button>
       <p class="msg" id="msg" aria-live="polite"></p>
     </form>
-  </section>
-
-  <section class="log">
-    <h2 class="h-serif">The log</h2>
-    <div id="log"></div>
   </section>
 </main>
 
 <footer class="site-foot"><div class="wrap" id="foot"></div></footer>
 
 <script src="/assets/content.js"></script>
-<!-- Markdown → HTML (marked) and HTML cleaning (DOMPurify), self-hosted -->
 <script src="/assets/vendor/marked.umd.js"></script>
 <script src="/assets/vendor/purify.min.js"></script>
+<script src="/assets/board.js"></script>
 <script>
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const fmt = iso => { const [y, m, d] = String(iso).slice(0, 10).split("-").map(Number); return `${d} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m - 1]} ${y}`; };
-const KIND = { aim: "Aim", think: "Think", build: "Build", look: "Look", who: "Who" };
-const board = document.getElementById("board");
-let filter = "all";
-let NOTES = [];
+const P = SITE.person;
+const KIND = { aim: "Aim", think: "Thinking", build: "Building", look: "Look", who: "Who", question: "Question", rant: "Rant", video: "Watching", obsession: "Hyperfixation", link: "Link" };
 
-/* ---------- markdown: render, then sanitise ----------
-   marked turns **bold**, lists, `code`, links etc. into HTML.
-   DOMPurify then strips anything dangerous (scripts, onclick=, etc.).
-   Every link opens in a new tab with rel=noopener.                    */
+/* ---------- markdown: render with marked, clean with DOMPurify ---------- */
 marked.setOptions({ gfm: true, breaks: true });
 DOMPurify.addHook("afterSanitizeAttributes", node => {
   if (node.tagName === "A") { node.setAttribute("target", "_blank"); node.setAttribute("rel", "noopener noreferrer"); }
   if (node.tagName === "IMG") node.setAttribute("loading", "lazy");
 });
 const md = text => DOMPurify.sanitize(marked.parse(String(text || "")), { FORBID_TAGS: ["style", "form", "input", "iframe"] });
-const plain = text => { const d = document.createElement("div"); d.innerHTML = md(text); return d.textContent.trim(); };
 
-/* Attached things: a blog post, a photo, or any link. */
+/* YouTube links get a thumbnail automatically */
+const ytId = url => (String(url).match(/(?:youtu\.be\/|v=|shorts\/|embed\/)([\w-]{11})/) || [])[1];
+
 function attachments(tags = []) {
   if (!tags.length) return "";
   return `<div class="att">${tags.map(t => {
     if (t.type === "photo") return `<a class="photo" href="${esc(t.url)}" target="_blank" rel="noopener"><img src="${esc(t.image || t.url)}" alt="${esc(t.title || "Photo")}" loading="lazy"></a>`;
-    const label = t.type === "post" ? "Blog post" : new URL(t.url).hostname.replace(/^www\./, "");
+    if (t.type === "video") {
+      const id = ytId(t.url), img = t.image || (id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : "");
+      return `<a class="video" href="${esc(t.url)}" target="_blank" rel="noopener">${img ? `<img src="${esc(img)}" alt="" loading="lazy">` : ""}<span class="t"><small>Video ↗</small>${esc(t.title || "")}</span></a>`;
+    }
+    let host = ""; try { host = new URL(t.url).hostname.replace(/^www\./, ""); } catch {}
+    const label = t.type === "post" ? "Blog post" : host;
     return `<a href="${esc(t.url)}" target="_blank" rel="noopener">${t.image ? `<img src="${esc(t.image)}" alt="" loading="lazy">` : ""}<span class="t"><small>${esc(label)} ↗</small>${esc(t.title || t.url)}</span></a>`;
   }).join("")}</div>`;
 }
+const noteHtml = n => `<div class="k">${KIND[n.kind] || n.kind}${n.pinned ? " · pinned" : ""}</div>
+  ${n.title ? `<h3>${esc(n.title)}</h3>` : ""}<div class="md">${md(n.body_md)}</div>${attachments(n.tags)}<div class="d">${fmt(n.date)}</div>`;
 
-/* ---------- tabs ---------- */
-function renderTabs() {
-  document.getElementById("tabs").innerHTML =
-    ["all", ...Object.keys(KIND)].map(k => `<button class="k-${k} ${filter === k ? "on" : ""}" data-k="${k}" ${k === "all" ? 'style="--c:var(--white)"' : ""}><i></i>${k === "all" ? "Everything" : KIND[k]}</button>`).join("") +
-    `<a class="room" href="#guestbook" style="text-decoration:none">+ leave one yourself</a><button class="shake" id="shake" style="--c:var(--gold)"><i></i>shake the board</button>`;
-  document.querySelectorAll("[data-k]").forEach(b => b.onclick = () => { filter = b.dataset.k; renderTabs(); applyFilter(); });
-  document.getElementById("shake").onclick = () => scatter(false);
+/* ---------------------------- 1. HELLO ---------------------------- */
+function renderHello(p = {}) {
+  if (p.greeting) document.getElementById("greeting").innerHTML = esc(p.greeting).replace(/Mazi/, '<span class="scribble">Mazi</span>');
+  document.getElementById("bio").textContent = p.bio || P.oneLiner;
+  const box = document.getElementById("portrait"), hello = document.getElementById("hello");
+  if (p.photo_url) {                      // only show the photo frame when there IS a photo
+    box.innerHTML = `<img src="${esc(p.photo_url)}" alt="${esc(p.photo_alt || "Mazi David")}">`;
+    box.hidden = false; hello.classList.remove("nophoto");
+  }
+  startTyping(p.roles?.length ? p.roles : ["AI agents", "browser extensions", "tools for students"]);
 }
-const applyFilter = () => board.querySelectorAll(".note").forEach(n => n.classList.toggle("dim", filter !== "all" && n.dataset.kind !== filter));
-
-/* ---------- notes ---------- */
-function renderNotes() {
-  document.getElementById("entry").innerHTML = NOTES.length
-    ? `ENTRY ${String(NOTES.length).padStart(3, "0")}<br>UPDATED ${fmt([...NOTES].sort((a, b) => b.date.localeCompare(a.date))[0].date).toUpperCase()}` : "";
-  board.innerHTML = NOTES.map(n => {
-    const wide = (n.body_md || "").length > 260 || (n.tags || []).length > 1;
-    return `
-    <article class="note ${n.kind} k-${n.kind} ${wide ? "wide" : ""}" data-kind="${n.kind}">
-      <div class="k">${KIND[n.kind] || n.kind}${n.pinned ? " · pinned" : ""}</div>
-      ${n.title ? `<h3>${esc(n.title)}</h3>` : ""}
-      <div class="md">${md(n.body_md)}</div>
-      ${attachments(n.tags)}
-      <div class="d"><span>${fmt(n.date)}</span></div>
-    </article>`;
-  }).join("");
-  applyFilter();
-
-  document.getElementById("log").innerHTML = [...NOTES].sort((a, b) => b.date.localeCompare(a.date)).map(n => `
-    <div class="row k-${n.kind}"><span class="d">${fmt(n.date)}</span><span class="dot"></span>
-    <span><b>${esc(n.title || "Untitled")}</b> <span class="t">— ${esc(plain(n.body_md).slice(0, 160))}</span></span><span class="kind">${KIND[n.kind] || ""}</span></div>`).join("");
-
-  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => scatter(true));
+/* The "I build …" line types, pauses, deletes and moves to the next role */
+let typingTimer;
+function startTyping(roles) {
+  clearTimeout(typingTimer);
+  const el = document.getElementById("typed");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = roles.join(", "); return; }
+  let i = 0, j = 0, del = false;
+  (function tick() {
+    const word = roles[i % roles.length];
+    j += del ? -1 : 1;
+    el.textContent = word.slice(0, j);
+    let wait = del ? 35 : 70;
+    if (!del && j === word.length) { del = true; wait = 1600; }
+    else if (del && j === 0) { del = false; i++; wait = 300; }
+    typingTimer = setTimeout(tick, wait);
+  })();
 }
+document.getElementById("links").innerHTML = [
+  ["Linktree", P.links.linktree, "lt"], ["GitHub", P.links.github], ["LinkedIn", P.links.linkedin],
+  ["X", P.links.x], ["Blog", P.links.blog], ["Photos", P.links.gallery], ["Email", `mailto:${P.email}`],
+].map(([l, h, c]) => `<a class="${c || ""}" href="${esc(h)}">${esc(l)}${c ? " ↗" : ""}</a>`).join("");
 
-/* scatter(): masonry columns + jitter + tilt. seeded = same layout every visit. */
-function mulberry(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-function scatter(seeded) {
-  if (matchMedia("(max-width:760px)").matches) { board.style.height = ""; return; }   // phones: stacked list
-  const rnd = seeded ? mulberry(7) : Math.random;
-  const W = board.clientWidth, unit = 270, gap = 28;
-  const cols = Math.max(1, Math.floor((W - gap) / (unit + gap)));
-  const offset = (W - (cols * unit + (cols - 1) * gap)) / 2;
-  const colH = Array(cols).fill(30);
-  board.querySelectorAll(".note").forEach((el, i) => {
-    const w = el.offsetWidth;
-    const col = colH.indexOf(Math.min(...colH));
-    const x = offset + col * (unit + gap) + (rnd() - .5) * 22;
-    const y = colH[col] + (rnd() - .5) * 18;
-    el.style.left = Math.max(8, Math.min(W - w - 8, x)) + "px";
-    el.style.top = y + "px";
-    el.style.setProperty("--rot", ((rnd() - .5) * 6).toFixed(1) + "deg");
-    el.style.zIndex = i + 1;
-    colH[col] = y + el.offsetHeight + 34;
-    // a wide note also pushes down the column to its right
-    if (w > unit + 10 && col + 1 < cols) colH[col + 1] = Math.max(colH[col + 1], colH[col]);
-  });
-  board.style.height = Math.max(...colH) + 20 + "px";
-}
-
-/* drag with Pointer Events; tiny moves count as clicks so links still work */
-let topZ = 100;
-board.addEventListener("pointerdown", e => {
-  const card = e.target.closest(".note");
-  if (!card || matchMedia("(max-width:760px)").matches) return;
-  const sx = e.clientX, sy = e.clientY, l0 = card.offsetLeft, t0 = card.offsetTop;
-  let moved = false;
-  const move = ev => {
-    const dx = ev.clientX - sx, dy = ev.clientY - sy;
-    if (!moved && Math.hypot(dx, dy) < 4) return;
-    if (!moved) { moved = true; card.classList.add("dragging"); card.style.zIndex = ++topZ; }
-    card.style.left = l0 + dx + "px"; card.style.top = t0 + dy + "px";
-  };
-  const up = () => {
-    card.classList.remove("dragging"); removeEventListener("pointermove", move); removeEventListener("pointerup", up);
-    if (moved) card.addEventListener("click", ev => ev.preventDefault(), { once: true, capture: true });  // a drag isn't a click
-  };
-  addEventListener("pointermove", move); addEventListener("pointerup", up);
+/* ---------------------------- 2. BOARD ---------------------------- */
+let mine = {}; try { mine = JSON.parse(localStorage.getItem("md_reacted") || "{}"); } catch {}
+let REACTIONS = {};
+const board = MDBoard.create(document.getElementById("board"), {
+  mode: "view", notes: [], edges: [],
+  renderBody: noteHtml,
+  onReact: async (id, emoji, btn) => {
+    const key = `${id}:${emoji}`;
+    if (mine[key]) { btn.classList.add("pop"); setTimeout(() => btn.classList.remove("pop"), 400); return; }
+    mine[key] = 1; try { localStorage.setItem("md_reacted", JSON.stringify(mine)); } catch {}
+    REACTIONS[id] = REACTIONS[id] || {}; REACTIONS[id][emoji] = (REACTIONS[id][emoji] || 0) + 1;
+    board.setReactions(REACTIONS);
+    fetch("/api/react", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ note_id: id, emoji }) }).catch(() => {});
+  },
 });
 
-/* ---------- visitors' wall ---------- */
+let NOTES = [], kindFilter = "all";
+function renderKinds() {
+  const used = [...new Set(NOTES.map(n => n.kind))];
+  document.getElementById("kinds").innerHTML = ["all", ...used].map(k =>
+    `<button type="button" class="k-${k} ${kindFilter === k ? "on" : ""}" data-k="${k}"><i></i>${k === "all" ? "Everything" : KIND[k] || k}</button>`).join("");
+  document.querySelectorAll("#kinds button").forEach(b => b.onclick = () => { kindFilter = b.dataset.k; renderKinds(); applyKind(); });
+}
+function applyKind() {
+  document.querySelectorAll("#board .bd-node").forEach(el => {
+    const n = NOTES.find(x => x.id === Number(el.dataset.id));
+    el.classList.toggle("filtered", kindFilter !== "all" && n?.kind !== kindFilter);
+  });
+}
+/* List view: same notes as plain cards (handy on phones and for screen readers) */
+document.getElementById("viewtoggle").onclick = e => {
+  const list = document.getElementById("listview"), on = !list.classList.contains("on");
+  list.classList.toggle("on", on);
+  document.getElementById("board").hidden = on;
+  e.target.textContent = on ? "Board view" : "List view";
+  if (on) list.innerHTML = NOTES.map(n => `<article class="bd-node k-${n.kind}">${noteHtml(n)}</article>`).join("");
+  else board.fit();
+};
+
+function loadBoard(d) {
+  NOTES = d.notes;
+  REACTIONS = d.reactions || {};
+  board.setData({ notes: d.notes, edges: d.edges || [], reactions: REACTIONS });
+  renderKinds(); applyKind();
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { board.render(); applyKind(); board.fit(); });
+}
+
+/* --------------------------- 3. TIMELINE --------------------------- */
+function renderTimeline(items) {
+  const tl = document.getElementById("tl");
+  tl.innerHTML = `<div class="fill"></div>` + items.map((t, i) => `
+    <article class="ti ${i === items.length - 1 ? "now" : ""}">
+      <div class="txt"><div class="when">${esc(t.when_label)}</div><h3>${esc(t.title)}</h3><p>${esc(t.body)}</p></div>
+      ${t.image_url ? `<div class="pic"><img src="${esc(t.image_url)}" alt="${esc(t.image_alt || t.title)}" loading="lazy"></div>` : `<div class="pic"></div>`}
+    </article>`).join("");
+  // Reveal each point as it scrolls into view
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -20% 0px" });
+  tl.querySelectorAll(".ti").forEach(el => io.observe(el));
+  progress();
+}
+/* The line down the middle fills up as you scroll through the section */
+function progress() {
+  const tl = document.getElementById("tl"), r = tl.getBoundingClientRect();
+  const p = Math.min(1, Math.max(0, (innerHeight * 0.7 - r.top) / r.height));
+  tl.style.setProperty("--p", (p * 100).toFixed(1) + "%");
+}
+addEventListener("scroll", progress, { passive: true });
+
+/* ----------------------------- 4. WALL ----------------------------- */
 function renderWall(list) {
   const wall = document.getElementById("wall");
   if (!list.length) { wall.innerHTML = `<p class="empty">No notes yet. Be the first.</p>`; return; }
-  const rnd = mulberry(3);
-  wall.innerHTML = list.map(v => `<div class="vnote" style="--rot:${((rnd() - .5) * 5).toFixed(1)}deg"><p>${esc(v.body)}</p><span class="by">— ${esc(v.name || "Anonymous")} · ${fmt(v.date)}</span></div>`).join("");
+  wall.innerHTML = list.map((v, i) => `<div class="vnote" style="--rot:${((i * 37 % 7) - 3) * .7}deg"><p>${esc(v.body)}</p><span class="by">— ${esc(v.name || "Anonymous")} · ${fmt(v.date)}</span></div>`).join("");
 }
-
 const form = document.getElementById("leave"), msg = document.getElementById("msg");
 form.body.addEventListener("input", () => document.getElementById("count").textContent = `${form.body.value.length} / 500`);
 form.addEventListener("submit", async e => {
@@ -315,34 +326,32 @@ form.addEventListener("submit", async e => {
   if (body.length < 2) { msg.className = "msg err"; msg.textContent = "Write a little more first."; return; }
   const btn = form.querySelector("button"); btn.disabled = true;
   try {
-    const r = await fetch("/api/board", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: form.name.value, body, website: form.website.value }),
-    });
+    const r = await fetch("/api/board", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: form.name.value, body, website: form.website.value }) });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || "Couldn't pin that. Try again later.");
     form.reset(); document.getElementById("count").textContent = "0 / 500";
     msg.className = "msg ok"; msg.textContent = "Pinned for review. It'll show up once I've read it. Thanks!";
-  } catch (err) {
-    msg.className = "msg err"; msg.textContent = err.message;
-  } finally { btn.disabled = false; }
+  } catch (err) { msg.className = "msg err"; msg.textContent = err.message; }
+  finally { btn.disabled = false; }
 });
 
-/* ---------- footer ---------- */
 document.getElementById("foot").innerHTML = `
-  <span>&copy; ${new Date().getFullYear()} ${esc(SITE.person.fullName)}</span>
-  <a href="${SITE.person.links.x}">X</a><a href="${SITE.person.links.linktree}">Linktree</a><a href="${SITE.person.links.github}">GitHub</a>
-  <a class="right" href="https://work.mazidavid.com" style="font-family:var(--serif);font-style:italic">back to the tidy version →</a>`;
+  <span>&copy; ${new Date().getFullYear()} ${esc(P.fullName)}</span>
+  <a href="${P.links.linktree}">Linktree</a><a href="${P.links.x}">X</a><a href="${P.links.github}">GitHub</a>
+  <a class="right" href="https://work.mazidavid.com" style="font-family:var(--serif);font-style:italic">the tidy version →</a>`;
 
-/* ---------- load: fallback first, then the live board ---------- */
-NOTES = SITE.notes.map((n, i) => ({ id: i, kind: n.kind, title: n.title, body_md: n.text + (n.link ? `\n\n[open ↗](${n.link})` : ""), tags: [], pinned: n.kind === "aim", date: n.date }));
-renderTabs(); renderNotes(); renderWall([]);
-fetch("/api/board").then(r => r.ok ? r.json() : null).then(j => {
-  if (!j) return;
-  if (j.notes?.length) { NOTES = j.notes; renderNotes(); }
-  renderWall(j.visitors || []);
+/* ------------- load: offline fallback first, then the live data ------------- */
+renderHello(SITE.profile || {});
+loadBoard({ notes: SITE.notes.map((n, i) => ({ id: i + 1, kind: n.kind, title: n.title, body_md: n.text, tags: n.link ? [{ type: "link", url: n.link, title: "Open" }] : [], pinned: false, date: n.date })), edges: [] });
+renderTimeline(SITE.timeline || []);
+renderWall([]);
+fetch("/api/board").then(r => r.ok ? r.json() : null).then(d => {
+  if (!d) return;
+  if (d.profile) renderHello(d.profile);
+  if (d.notes?.length) loadBoard(d);
+  if (d.timeline?.length) renderTimeline(d.timeline);
+  renderWall(d.visitors || []);
 }).catch(() => {});
-let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => scatter(true), 150); });
 </script>
 </body>
 </html>

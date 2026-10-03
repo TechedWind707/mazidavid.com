@@ -1,0 +1,108 @@
+/* =====================================================================
+   board.css — looks for the zoomable notes board (see board.js)
+   Notes are always "paper" (light card, dark text) so they read the same
+   on the dark board and the light board. Kinds get their own pin/tape.
+   ===================================================================== */
+.bd{position:relative; overflow:hidden; border-radius:var(--r-xl); border:1px solid var(--hair);
+  --board:#121210; --dot:rgba(209,169,10,.16); --edge:rgba(209,169,10,.42); --edge-hub:#D1A90A; --label:#cfcab9;
+  background:radial-gradient(circle, var(--dot) 1px, transparent 1.6px) 0 0/22px 22px, var(--board);
+  height:min(78vh, 760px); min-height:460px; cursor:grab; touch-action:pan-y; user-select:none}
+:root[data-theme="light"] .bd{--board:#F3EFE3; --dot:rgba(13,13,11,.13); --edge:rgba(62,79,33,.45); --edge-hub:#7A6000; --label:#4b4a43}
+.bd.panning{cursor:grabbing}
+.bd-world{position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform}
+.bd-edges{position:absolute; left:0; top:0; width:1px; height:1px; overflow:visible; pointer-events:none}
+.bd-edge path{fill:none; stroke:var(--edge); stroke-width:2; stroke-dasharray:1 0; transition:stroke .2s, opacity .2s}
+.bd-edge.hub path{stroke:var(--edge-hub); stroke-width:3}
+.bd-edge text{font:500 12px "IBM Plex Mono",monospace; fill:var(--label); paint-order:stroke; stroke:var(--board); stroke-width:5px; stroke-linejoin:round; letter-spacing:.02em}
+.bd.focusing .bd-edge{opacity:.15}
+.bd.focusing .bd-edge.near{opacity:1}
+.bd.focusing .bd-edge.near path{stroke:var(--edge-hub); stroke-width:3.5}
+
+/* ---------- a note ---------- */
+.bd-node{position:absolute; padding:20px 18px 12px; background:#FFFFFF; color:#0D0D0B; border-radius:var(--r-lg);
+  box-shadow:0 18px 36px -18px rgba(0,0,0,.7); transform:rotate(var(--rot,0deg)); cursor:grab;
+  transition:box-shadow .2s, opacity .25s, filter .25s, transform .2s}
+.bd-node:hover{box-shadow:0 26px 44px -18px rgba(0,0,0,.8)}
+.bd-node.dragging{cursor:grabbing; z-index:50; transform:rotate(0deg) scale(1.03); transition:none}
+.bd.focusing .bd-node{opacity:.28; filter:grayscale(.6)}
+.bd.focusing .bd-node.near{opacity:1; filter:none}
+.bd-node.sel{box-shadow:0 0 0 3px #D1A90A, 0 26px 44px -18px rgba(0,0,0,.8)}
+/* hubs: the most connected notes stand out */
+.bd-node.hub{box-shadow:0 0 0 2px #D1A90A, 0 22px 44px -16px rgba(0,0,0,.8)}
+.bd-node.hub h3{font-size:24px}
+.bd-deg{position:absolute; right:10px; top:10px; font:600 10.5px "IBM Plex Mono",monospace; color:#5E5E57; border:1px solid #E6E4DC; border-radius:999px; padding:1px 7px}
+
+/* pin (default) */
+.bd-node::before{content:""; position:absolute; top:-7px; left:50%; width:14px; height:14px; margin-left:-7px; border-radius:50%;
+  background:var(--c,#D1A90A); box-shadow:0 2px 3px rgba(0,0,0,.45)}
+.bd-node .k{font:500 11px "IBM Plex Mono",monospace; text-transform:uppercase; letter-spacing:.08em; color:#5E5E57; display:flex; gap:7px; align-items:center}
+.bd-node .k::before{content:""; width:8px; height:8px; border-radius:50%; background:var(--c,#D1A90A)}
+.bd-node h3{font:600 21px/1.15 "Fraunces",Georgia,serif; margin:6px 0}
+.bd-node .d{font:500 11.5px "IBM Plex Mono",monospace; color:#5E5E57; margin-top:10px}
+
+/* kinds */
+.k-aim{--c:#0D0D0B} .k-think{--c:#D1A90A} .k-build{--c:#556B2F} .k-look{--c:#D1A90A} .k-who{--c:#E7A3B5}
+.k-question{--c:#556B2F} .k-rant{--c:#E7A3B5} .k-video{--c:#D1A90A} .k-obsession{--c:#B0306A} .k-link{--c:#556B2F}
+.bd-node.k-aim{background:#D1A90A}
+.bd-node.k-aim .k,.bd-node.k-aim .d{color:#3b3000}
+.bd-node.k-think::before{width:78px; height:20px; margin-left:-39px; top:-9px; border-radius:3px; background:rgba(209,169,10,.8); box-shadow:none; transform:rotate(-3deg)}
+.bd-node.k-who .md{font-family:var(--hand); font-size:25px; line-height:1.1}
+.bd-node.k-question{border-top:5px solid #556B2F}
+.bd-node.k-question::after{content:"?"; position:absolute; right:14px; bottom:4px; font:700 64px/1 "Fraunces",serif; color:rgba(85,107,47,.13); pointer-events:none}
+.bd-node.k-rant{background:#0D0D0B; color:#F3F1EA; border:2px solid #E7A3B5}
+.bd-node.k-rant .k,.bd-node.k-rant .d{color:#E7A3B5}
+.bd-node.k-rant .md a{color:#E7A3B5}
+.bd-node.k-obsession{background:#FBEEF2; box-shadow:0 0 0 2px #E7A3B5, 0 18px 36px -18px rgba(0,0,0,.7)}
+.bd-node.k-obsession .k{color:#B0306A}
+
+/* markdown inside notes */
+.bd-node .md{font-size:15px; line-height:1.5; overflow-wrap:anywhere}
+.bd-node .md > :first-child{margin-top:0} .bd-node .md > :last-child{margin-bottom:0}
+.bd-node .md p{margin:0 0 8px}
+.bd-node .md ul,.bd-node .md ol{margin:4px 0 8px; padding-left:20px}
+.bd-node .md a{color:#3E4F21; text-underline-offset:2px}
+.bd-node.k-aim .md a{color:#0D0D0B}
+.bd-node .md code{font:500 13px "IBM Plex Mono",monospace; background:#F6F5F0; padding:1px 5px; border-radius:6px; color:#0D0D0B}
+.bd-node .md blockquote{margin:6px 0; padding-left:12px; border-left:3px solid #D1A90A; color:#5E5E57}
+.bd-node .md img{border-radius:10px; margin:6px 0}
+
+/* attachments: posts, photos, videos, links */
+.bd-node .att{display:grid; gap:8px; margin-top:10px}
+.bd-node .att a{display:flex; gap:10px; align-items:center; text-decoration:none; color:inherit; border:1px solid #E6E4DC; border-radius:14px; padding:6px; background:#F6F5F0}
+.bd-node .att a:hover{border-color:#556B2F}
+.bd-node .att img{width:54px; height:54px; object-fit:cover; border-radius:10px; flex:none; background:#E6E4DC}
+.bd-node .att .t{font:500 13.5px/1.3 var(--sans)}
+.bd-node .att .t small{display:block; font:500 10.5px "IBM Plex Mono",monospace; text-transform:uppercase; letter-spacing:.06em; color:#5E5E57}
+.bd-node .att a.photo,.bd-node .att a.video{padding:0; border:0; display:block; background:none; position:relative}
+.bd-node .att a.photo img,.bd-node .att a.video img{width:100%; height:150px; border-radius:14px}
+.bd-node .att a.video::after{content:"▶"; position:absolute; inset:0; display:grid; place-items:center; font-size:30px; color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.6)}
+.bd-node .att a.video .t{position:absolute; left:8px; right:8px; bottom:8px; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.8)}
+.bd-node .att a.video .t small{color:#eee}
+.bd-node.k-rant .att a{background:#1C1C18; border-color:#2A2A26}
+
+/* reactions */
+.bd-react{display:flex; gap:4px; flex-wrap:wrap; margin-top:10px; padding-top:8px; border-top:1px dashed rgba(0,0,0,.12)}
+.bd-node.k-rant .bd-react{border-color:rgba(255,255,255,.15)}
+.bd-react button{display:inline-flex; gap:3px; align-items:center; border:1px solid transparent; background:rgba(0,0,0,.04); border-radius:999px; padding:2px 7px; font:13px/1.4 system-ui; cursor:pointer; color:inherit}
+.bd-react button:hover{border-color:#D1A90A}
+.bd-react button.mine{background:rgba(209,169,10,.25); border-color:#D1A90A}
+.bd-react button b{font:600 11px "IBM Plex Mono",monospace}
+.bd-react button.pop{animation:bdpop .4s}
+@keyframes bdpop{40%{transform:scale(1.35)}}
+
+/* controls */
+.bd-tools{position:absolute; right:12px; bottom:12px; display:flex; gap:6px; z-index:5}
+.bd-tools button{min-width:38px; height:38px; padding:0 12px; border-radius:999px; border:1px solid var(--hair); background:var(--surface); color:var(--fg); font:600 15px var(--sans); cursor:pointer; box-shadow:var(--shadow)}
+.bd-tools button:hover{border-color:var(--gold)}
+.bd-hint{position:absolute; left:50%; top:14px; transform:translateX(-50%); padding:6px 14px; border-radius:999px; background:rgba(13,13,11,.85); color:#fff; font:500 13px var(--sans); opacity:0; pointer-events:none; transition:opacity .25s; z-index:6}
+.bd-hint.on{opacity:1}
+.bd-engage,.bd-done{display:none}
+@media (hover:none){
+  .bd:not(.engaged) .bd-engage{display:block; position:absolute; inset:auto 50% 16px auto; transform:translateX(50%); z-index:6; padding:10px 18px; border-radius:999px; border:0; background:#D1A90A; color:#0D0D0B; font:600 14px var(--sans); box-shadow:0 10px 24px -10px rgba(0,0,0,.7)}
+  .bd.engaged{touch-action:none}
+  .bd.engaged .bd-done{display:block; position:absolute; left:12px; top:12px; z-index:6; padding:8px 16px; border-radius:999px; border:0; background:#0D0D0B; color:#fff; font:600 14px var(--sans)}
+  .bd:not(.engaged) .bd-tools{display:none}
+}
+/* edit mode (admin) */
+.bd-edit{height:70vh}
+.bd.connecting .bd-node{cursor:crosshair}

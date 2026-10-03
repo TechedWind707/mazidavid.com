@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css">
+<link rel="stylesheet" href="/assets/board.css">
 <link rel="stylesheet" href="/admin/admin.css">
 <!--
   ADMIN for work.mazidavid.com (projects) and me.mazidavid.com (board).
@@ -46,6 +47,9 @@
       <nav class="tabs" id="tabs">
         <button data-tab="projects" class="on">Projects</button>
         <button data-tab="notes">Board notes</button>
+        <button data-tab="layout">Board layout</button>
+        <button data-tab="timeline">Timeline</button>
+        <button data-tab="profile">About me</button>
         <button data-tab="visitors">Visitor notes <span class="pill" id="pendingCount"></span></button>
         <button data-tab="audit">Activity</button>
       </nav>
@@ -115,7 +119,7 @@
           <h3 id="nfTitle">Edit note</h3>
           <div class="grid3">
             <label>Kind
-              <select name="kind"><option>think</option><option>aim</option><option>build</option><option>look</option><option>who</option></select>
+              <select name="kind"><option value="think">think (gold tape)</option><option value="aim">aim (gold card)</option><option value="build">build</option><option value="look">look (photos)</option><option value="who">who (handwritten)</option><option value="question">question</option><option value="rant">rant</option><option value="video">video I'm watching</option><option value="obsession">current hyperfixation</option><option value="link">link</option></select>
             </label>
             <label>Date<input name="date" type="date"></label>
             <div class="checks col">
@@ -135,6 +139,7 @@
             <div class="tagbtns">
               <button class="btn sm" type="button" id="addPost">+ Blog post</button>
               <button class="btn sm" type="button" id="addPhoto">+ Photo</button>
+              <button class="btn sm" type="button" id="addVideo">+ Video</button>
               <button class="btn sm" type="button" id="addLink">+ Link</button>
             </div>
             <div class="picker" id="picker" hidden></div>
@@ -148,6 +153,88 @@
           <p class="msg" id="noteMsg" aria-live="polite"></p>
         </form>
       </div>
+    </section>
+
+    <!-- BOARD LAYOUT -->
+    <section data-panel="layout" hidden>
+      <div class="bar">
+        <h2 class="h-serif">Board layout</h2>
+        <button class="btn" id="connectBtn" type="button">Connect two notes</button>
+        <button class="btn solid" id="saveLayout" type="button">Save layout</button>
+      </div>
+      <p class="hint">Drag notes to where visitors should first see them, then <b>Save layout</b>. To link two notes, press <b>Connect two notes</b> and click one, then the other. Notes with 3+ connections become gold-ringed "hubs". Visitors can move things around, but a reload always restores this layout.</p>
+      <p class="msg" id="layoutMsg" aria-live="polite"></p>
+      <div class="split layout-split">
+        <div id="layoutBoard"></div>
+        <div class="card edges-panel">
+          <div id="pendingEdge" hidden class="pending">
+            <b>New connection</b>
+            <p id="pendingNames"></p>
+            <label>Tiny note on the line <small>optional, up to 60 characters</small><input id="pendingLabel" maxlength="60" placeholder="e.g. led to, because of, same energy"></label>
+            <div class="actions"><button class="btn solid sm" type="button" id="pendingAdd">Add line</button><button class="btn sm" type="button" id="pendingCancel">Cancel</button></div>
+          </div>
+          <h3>Lines <small id="edgeCount"></small></h3>
+          <div id="edgeList" class="edge-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TIMELINE -->
+    <section data-panel="timeline" hidden>
+      <div class="bar">
+        <h2 class="h-serif">Timeline</h2>
+        <a class="link" href="https://me.mazidavid.com/#timeline-sec" target="_blank" rel="noopener">view ↗</a>
+        <button class="btn solid" id="newTl">+ New point</button>
+      </div>
+      <p class="hint">Sorted by the "sort" field (2024-07 = July 2024). Add a picture only if you have one; points without one just show text.</p>
+      <div class="split">
+        <div class="list" id="tlList"></div>
+        <form class="card editor" id="tlForm" hidden>
+          <h3 id="tlTitle">Edit point</h3>
+          <div class="grid3">
+            <label>Shown as<input name="when_label" maxlength="40" placeholder="Sept 2025"></label>
+            <label>Sort<input name="sort_key" maxlength="10" placeholder="2025-09" pattern="\d{4}(-\d{2})?(-\d{2})?"></label>
+            <div class="checks col"><label><input type="checkbox" name="hidden"> Hidden</label></div>
+          </div>
+          <label>Title<input name="title" maxlength="140" required></label>
+          <label>Text<textarea name="body" rows="4" maxlength="1200"></textarea></label>
+          <label>Picture URL <small>https only, or pick one from the gallery</small><input name="image_url" type="url" placeholder="https://"></label>
+          <div class="tagbtns"><button class="btn sm" type="button" id="tlPickPhoto">Pick from gallery</button><button class="btn sm" type="button" id="tlClearPhoto">Remove picture</button></div>
+          <div class="picker" id="tlPicker" hidden></div>
+          <img id="tlPreview" class="preview-img" alt="" hidden>
+          <label>Picture description <small>for screen readers</small><input name="image_alt" maxlength="200"></label>
+          <div class="actions">
+            <button class="btn solid" type="submit">Save</button>
+            <button class="btn" type="button" data-cancel>Cancel</button>
+            <button class="btn danger" type="button" id="deleteTl">Delete</button>
+          </div>
+          <p class="msg" id="tlMsg" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section data-panel="profile" hidden>
+      <div class="bar">
+        <h2 class="h-serif">About me (top of me.mazidavid.com)</h2>
+        <a class="link" href="https://me.mazidavid.com" target="_blank" rel="noopener">view ↗</a>
+      </div>
+      <form class="card editor profile-form" id="profileForm">
+        <div class="grid2">
+          <div>
+            <label>Photo of you <small>https URL, or pick from the gallery</small><input name="photo_url" type="url" placeholder="https://"></label>
+            <div class="tagbtns" style="margin-top:8px"><button class="btn sm" type="button" id="pfPick">Pick from gallery</button><button class="btn sm" type="button" id="pfClear">Remove</button></div>
+            <div class="picker" id="pfPicker" hidden></div>
+            <label style="margin-top:12px">Photo description<input name="photo_alt" maxlength="200" placeholder="Mazi David smiling at the camera"></label>
+          </div>
+          <img id="pfPreview" class="preview-img portrait-prev" alt="" hidden>
+        </div>
+        <label>Greeting <small>the big headline; the word "Mazi" gets the handwritten style</small><input name="greeting" maxlength="140"></label>
+        <label>Short bio<textarea name="bio" rows="4" maxlength="1200"></textarea></label>
+        <label>"I build …" line <small>one per line; they type out one after another</small><textarea name="roles" rows="5"></textarea></label>
+        <div class="actions"><button class="btn solid" type="submit">Save</button></div>
+        <p class="msg" id="pfMsg" aria-live="polite"></p>
+      </form>
     </section>
 
     <!-- VISITOR NOTES -->
@@ -171,6 +258,7 @@
 
 <script src="/assets/vendor/marked.umd.js"></script>
 <script src="/assets/vendor/purify.min.js"></script>
+<script src="/assets/board.js"></script>
 <script src="/admin/admin.js"></script>
 </body>
 </html>

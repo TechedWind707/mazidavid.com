@@ -229,6 +229,24 @@ window.SITE = {
     { title: "Running Python on Your Android Phone", url: "https://blog.mazidavid.com/running-python-on-your-android-phone", date: "2025-11-14" }
   ],
 
+  /* ---------- /me: fallback profile + timeline (live copies are edited in /admin) ---------- */
+  profile: {
+    photo_url: "",
+    greeting: "Hi, I'm David. Most people call me Mazi.",
+    bio: "From Lagos to Dartmouth, Nova Scotia. I study IT Programming at NSCC and spend the rest of my time building agents, extensions and small tools that do the boring parts for people.",
+    roles: ["AI agents", "Raycast and Chrome extensions", "tools for students", "websites for local businesses"]
+  },
+  timeline: [
+    { when_label: "2018", title: "Common Entrance, then Mena College", body: "Wrote the Common Entrance exam to move from Grade 6 at Zikino into junior high at Mena College, Lagos." },
+    { when_label: "2021", title: "Junior WAEC", body: "Grade 9 to Grade 10: wrote the Junior WAEC exams to move from junior high to senior high." },
+    { when_label: "Grade 11", title: "Interswitch SPAK 5.0", body: "Represented my school in a Pan-African science and maths competition. Made it to the quarterfinals." },
+    { when_label: "July 2024", title: "Graduated senior high", body: "Finished at Mena College as the best graduating student." },
+    { when_label: "Sept 2024", title: "Started ADSE at Aptech", body: "Began a two-year Advanced Diploma in Software Engineering." },
+    { when_label: "Feb 2025", title: "Moved to Dartmouth, Nova Scotia", body: "New country, new winters." },
+    { when_label: "April 2025", title: "Left Aptech", body: "Tried to keep up with the classes online from Canada, then stepped away." },
+    { when_label: "Sept 2025", title: "Started at NSCC", body: "IT Programming diploma at Nova Scotia Community College, Halifax." },
+    { when_label: "Now", title: "Currently here", body: "Building, shipping, writing. Stick around to see what comes next." }
+  ],
   /* ---------- /me: pinned notes (the personal, less tidy side) ----------
      kind: aim | think | build | look | who  */
   notes: [

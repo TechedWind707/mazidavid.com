@@ -10,6 +10,10 @@
    ?r=projects   GET list (incl. hidden) · POST create · PUT ?id= update · DELETE ?id=
    ?r=notes      GET list · POST create · PUT ?id= update · DELETE ?id=
    ?r=visitors   GET ?status=pending|approved · PUT ?id= {action} · DELETE ?id=
+   ?r=layout     PUT {positions:[{id,x,y}]}  where notes sit on the board
+   ?r=edges      GET · POST {from_id,to_id,label} · PUT ?id= {label} · DELETE ?id=
+   ?r=timeline   GET · POST · PUT ?id= · DELETE ?id=
+   ?r=settings   GET · PUT {photo_url, photo_alt, greeting, bio, roles[]}
    ?r=audit      GET the last 60 admin events
    ===================================================================== */
 import { db } from "./_lib/db.js";
@@ -37,6 +41,10 @@ export default async function handler(req, res) {
     if (r === "projects") return await projects(req, res, id, body);
     if (r === "notes") return await notes(req, res, id, body);
     if (r === "visitors") return await visitors(req, res, id, body);
+    if (r === "layout") return await layout(req, res, body);
+    if (r === "edges") return await edgesRoute(req, res, id, body);
+    if (r === "timeline") return await timeline(req, res, id, body);
+    if (r === "settings") return await settings(req, res, body);
     if (r === "audit" && req.method === "GET") {
       const rows = await db()`select at, action, detail from admin_audit order by id desc limit 60`;
       return send(res, 200, { audit: rows });
@@ -63,7 +71,7 @@ const strList = (v, maxItems, maxLen) =>
 
 const KINDS = ["ai", "extension", "web", "mobile", "school", "design"];
 const STATUSES = ["ongoing", "shipped", "ideation", "halted"];
-const NOTE_KINDS = ["aim", "think", "build", "look", "who"];
+const NOTE_KINDS = ["aim", "think", "build", "look", "who", "question", "rant", "video", "obsession", "link"];
 
 function cleanProject(b) {
   const links = {};
@@ -88,7 +96,7 @@ function cleanProject(b) {
 function cleanTags(v) {
   if (!Array.isArray(v)) return [];
   return v.slice(0, 6).map((t) => ({
-    type: ["post", "photo", "link"].includes(t?.type) ? t.type : "link",
+    type: ["post", "photo", "video", "link"].includes(t?.type) ? t.type : "link",
     url: httpsUrl(t?.url),
     title: str(t?.title, 140),
     image: httpsUrl(t?.image),
@@ -151,7 +159,7 @@ async function projects(req, res, id, body) {
 async function notes(req, res, id, body) {
   const sql = db();
   if (req.method === "GET") {
-    const rows = await sql`select id, kind, title, body_md, tags, pinned, hidden, to_char(note_date,'YYYY-MM-DD') as date
+    const rows = await sql`select id::int as id, kind, title, body_md, tags, pinned, hidden, x, y, to_char(note_date,'YYYY-MM-DD') as date
       from board_notes order by pinned desc, note_date desc, id desc`;
     return send(res, 200, { notes: rows });
   }
@@ -160,7 +168,7 @@ async function notes(req, res, id, body) {
     if (!n.title && !n.body_md) return send(res, 400, { error: "Write something first" });
     const rows = await sql`insert into board_notes (kind, title, body_md, tags, pinned, hidden, note_date)
       values (${n.kind}, ${n.title}, ${n.body_md}, ${JSON.stringify(n.tags)}::jsonb, ${n.pinned}, ${n.hidden}, ${n.date})
-      returning id`;
+      returning id::int as id`;
     await audit(req, "note-create", rows[0].id);
     return send(res, 201, { ok: true, id: rows[0].id });
   }
@@ -189,7 +197,7 @@ async function visitors(req, res, id, body) {
   const sql = db();
   if (req.method === "GET") {
     const status = req.query.status === "approved" ? "approved" : "pending";
-    const rows = await sql`select id, name, body, status, created_at, approved_at from visitor_notes
+    const rows = await sql`select id::int as id, name, body, status, created_at, approved_at from visitor_notes
       where status=${status} order by created_at desc limit 200`;
     return send(res, 200, { visitors: rows });
   }
@@ -208,4 +216,116 @@ async function visitors(req, res, id, body) {
     return send(res, 200, { ok: true });
   }
   return send(res, 405, { error: "Method not allowed" });
+}
+
+/* ----------------------------- layout ----------------------------- */
+/* Saves where every note sits on the board (one query for all of them). */
+async function layout(req, res, body) {
+  if (req.method !== "PUT") return send(res, 405, { error: "Method not allowed" });
+  const list = Array.isArray(body.positions) ? body.positions.slice(0, 500) : [];
+  const ok = list.filter((p) => Number.isInteger(p.id) && Number.isFinite(p.x) && Number.isFinite(p.y));
+  if (!ok.length) return send(res, 400, { error: "No positions" });
+  const clamp = (v) => Math.max(-20000, Math.min(20000, Math.round(v)));
+  await db()`update board_notes b set x = v.x, y = v.y
+    from unnest(${ok.map((p) => p.id)}::bigint[], ${ok.map((p) => clamp(p.x))}::real[], ${ok.map((p) => clamp(p.y))}::real[]) as v(id, x, y)
+    where b.id = v.id`;
+  await audit(req, "layout-save", `${ok.length} notes`);
+  return send(res, 200, { ok: true });
+}
+
+/* ------------------------------ edges ------------------------------ */
+async function edgesRoute(req, res, id, body) {
+  const sql = db();
+  if (req.method === "GET") {
+    const rows = await sql`select id::int as id, from_id::int as from_id, to_id::int as to_id, label from board_edges order by id`;
+    return send(res, 200, { edges: rows });
+  }
+  if (req.method === "POST") {
+    const a = Number(body.from_id), b = Number(body.to_id);
+    if (!Number.isInteger(a) || !Number.isInteger(b) || a === b) return send(res, 400, { error: "Pick two different notes" });
+    const rows = await sql`insert into board_edges (from_id, to_id, label) values (${a}, ${b}, ${str(body.label, 60)})
+      on conflict do nothing returning id::int as id`;
+    if (!rows.length) return send(res, 409, { error: "Those two are already connected" });
+    await audit(req, "edge-create", `${a}-${b}`);
+    return send(res, 201, { ok: true, id: rows[0].id });
+  }
+  const eid = Number(id);
+  if (!Number.isInteger(eid)) return send(res, 400, { error: "id required" });
+  if (req.method === "PUT") {
+    await sql`update board_edges set label = ${str(body.label, 60)} where id = ${eid}`;
+    await audit(req, "edge-update", eid);
+    return send(res, 200, { ok: true });
+  }
+  if (req.method === "DELETE") {
+    await sql`delete from board_edges where id = ${eid}`;
+    await audit(req, "edge-delete", eid);
+    return send(res, 200, { ok: true });
+  }
+  return send(res, 405, { error: "Method not allowed" });
+}
+
+/* ----------------------------- timeline ----------------------------- */
+function cleanTimeline(b) {
+  return {
+    when_label: str(b.when_label, 40),
+    sort_key: /^\d{4}(-\d{2})?(-\d{2})?$/.test(String(b.sort_key)) ? String(b.sort_key) : "9999",
+    title: str(b.title, 140),
+    body: str(b.body, 1200),
+    image_url: httpsUrl(b.image_url),
+    image_alt: str(b.image_alt, 200),
+    hidden: !!b.hidden,
+  };
+}
+async function timeline(req, res, id, body) {
+  const sql = db();
+  if (req.method === "GET") {
+    const rows = await sql`select id::int as id, when_label, sort_key, title, body, image_url, image_alt, hidden from timeline_items order by sort_key, id`;
+    return send(res, 200, { timeline: rows });
+  }
+  if (req.method === "POST") {
+    const t = cleanTimeline(body);
+    if (!t.title) return send(res, 400, { error: "Title is required" });
+    const rows = await sql`insert into timeline_items (when_label, sort_key, title, body, image_url, image_alt, hidden)
+      values (${t.when_label}, ${t.sort_key}, ${t.title}, ${t.body}, ${t.image_url}, ${t.image_alt}, ${t.hidden}) returning id::int as id`;
+    await audit(req, "timeline-create", rows[0].id);
+    return send(res, 201, { ok: true, id: rows[0].id });
+  }
+  const tid = Number(id);
+  if (!Number.isInteger(tid)) return send(res, 400, { error: "id required" });
+  if (req.method === "PUT") {
+    const t = cleanTimeline(body);
+    if (!t.title) return send(res, 400, { error: "Title is required" });
+    await sql`update timeline_items set when_label=${t.when_label}, sort_key=${t.sort_key}, title=${t.title}, body=${t.body},
+      image_url=${t.image_url}, image_alt=${t.image_alt}, hidden=${t.hidden}, updated_at=now() where id=${tid}`;
+    await audit(req, "timeline-update", tid);
+    return send(res, 200, { ok: true });
+  }
+  if (req.method === "DELETE") {
+    await sql`delete from timeline_items where id=${tid}`;
+    await audit(req, "timeline-delete", tid);
+    return send(res, 200, { ok: true });
+  }
+  return send(res, 405, { error: "Method not allowed" });
+}
+
+/* ----------------------------- settings ----------------------------- */
+/* The block at the top of me.mazidavid.com: photo, greeting, bio, the typed roles */
+async function settings(req, res, body) {
+  const sql = db();
+  if (req.method === "GET") {
+    const rows = await sql`select value from site_settings where key='profile'`;
+    return send(res, 200, { profile: rows[0]?.value || {} });
+  }
+  if (req.method !== "PUT") return send(res, 405, { error: "Method not allowed" });
+  const v = {
+    photo_url: httpsUrl(body.photo_url),
+    photo_alt: str(body.photo_alt, 200),
+    greeting: str(body.greeting, 140),
+    bio: str(body.bio, 1200),
+    roles: strList(body.roles, 10, 60),
+  };
+  await sql`insert into site_settings (key, value) values ('profile', ${JSON.stringify(v)}::jsonb)
+    on conflict (key) do update set value = excluded.value, updated_at = now()`;
+  await audit(req, "profile-update");
+  return send(res, 200, { ok: true });
 }

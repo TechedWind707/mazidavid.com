@@ -1,82 +1,154 @@
 /* =====================================================================
-   eco-nav.js — the ONE menu bar shared by every mazidavid.com site
+   eco-nav.js — the floating menu + light/dark switch for mazidavid.com
    ---------------------------------------------------------------------
-   Drop this on any page and it injects a slim black bar at the very top
-   with links to every corner of the ecosystem:
+   Replaces the old always-on black bar. Now it's a small round "MD"
+   button in the bottom-right corner:
+     - click it → a little card opens with every site + the theme switch
+     - leave it alone for a few seconds → it shrinks to a tiny gold dot,
+       so it never competes with the page (good for recruiters on work.)
+     - move the mouse near the corner, scroll up, or tab to it → it grows back
 
-     Home · Work · Blog · Gallery · Me · Services
+   Usage (first thing inside <body>):
+     <script src="/assets/eco-nav.js" data-current="work" data-default="light"></script>
 
-   Usage (one line, anywhere in <body>, ideally right after it opens):
-     <script src="assets/eco-nav.js" data-current="work" defer></script>
+   data-current  which link is "you are here": home|work|blog|gallery|me
+   data-default  the page's own theme if the visitor never picked one
+   data-extra    optional JSON list of extra links shown first, e.g.
+                 '[{"label":"All photos","href":"/gallery.html"}]'
 
-   data-current = which link to highlight:
-     home | work | blog | gallery | me | services
+   THEME
+   The visitor's choice is saved in a cookie on .mazidavid.com, so
+   switching to dark on the hub also makes work., me. and gallery. dark.
+   The page reads it as <html data-theme="dark|light">; all colours in
+   tokens.css flip from that one attribute. Other scripts can listen:
+     window.addEventListener("md-theme", e => e.detail.theme)
 
-   It is self-contained (brings its own CSS), so it works on the hub,
-   the portfolio, the personal site, the photo gallery and Mazi Services
-   without touching their stylesheets. To add a new site later, add one
-   line to LINKS below and copy this file to every site (build.py does
-   it for the mazidavid sites; the gallery and services repos keep their
-   own copy).
+   services.mazidavid.com deliberately does NOT load this file: it's
+   kept separate (it may move to its own domain).
    ===================================================================== */
 (function () {
-  // The script tag that loaded us (so we can read data-current)
   const me = document.currentScript || document.querySelector('script[src*="eco-nav"]');
   const current = (me && me.dataset.current) || "";
+  const pageDefault = (me && me.dataset.default) || "dark";
+  let extra = [];
+  try { extra = JSON.parse((me && me.dataset.extra) || "[]"); } catch { /* ignore bad JSON */ }
 
-  // Every place in the ecosystem. Order = order in the bar.
+  /* ---------------- theme: read, apply, save ---------------- */
+  const COOKIE = "md_theme";
+  const onMazi = /(^|\.)mazidavid\.com$/.test(location.hostname);
+  function readTheme() {
+    const m = document.cookie.match(/(?:^|;\s*)md_theme=(light|dark)/);
+    if (m) return m[1];
+    try { const v = localStorage.getItem(COOKIE); if (v === "light" || v === "dark") return v; } catch {}
+    return pageDefault;
+  }
+  function saveTheme(t) {
+    // Cookie on the parent domain = one setting for every *.mazidavid.com site
+    document.cookie = `${COOKIE}=${t}; path=/; max-age=31536000; SameSite=Lax${onMazi ? "; domain=.mazidavid.com; Secure" : ""}`;
+    try { localStorage.setItem(COOKIE, t); } catch {}
+  }
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    window.dispatchEvent(new CustomEvent("md-theme", { detail: { theme: t } }));
+  }
+  applyTheme(readTheme());          // runs before the page paints its content
+  window.mdTheme = {
+    get: () => document.documentElement.dataset.theme,
+    set: (t) => { saveTheme(t); applyTheme(t); paintToggle(); },
+    toggle: () => window.mdTheme.set(window.mdTheme.get() === "dark" ? "light" : "dark"),
+  };
+
+  /* ---------------- links ---------------- */
   const LINKS = [
-    { id: "home",     label: "Home",     href: "https://mazidavid.com" },
-    { id: "work",     label: "Work",     href: "https://work.mazidavid.com" },
-    { id: "blog",     label: "Blog",     href: "https://blog.mazidavid.com" },
-    { id: "gallery",  label: "Gallery",  href: "https://gallery.mazidavid.com" },
-    { id: "me",       label: "Me",       href: "https://me.mazidavid.com" },
-    { id: "services", label: "Services", href: "https://services.mazidavid.com" }
+    { id: "home", label: "Home", href: "https://mazidavid.com" },
+    { id: "work", label: "Work", href: "https://work.mazidavid.com" },
+    { id: "blog", label: "Blog", href: "https://blog.mazidavid.com" },
+    { id: "gallery", label: "Gallery", href: "https://gallery.mazidavid.com" },
+    { id: "me", label: "Me", href: "https://me.mazidavid.com" },
+    { id: "services", label: "Mazi Services", href: "https://services.mazidavid.com" },
   ];
 
-  // Palette (kept in sync with shared/tokens.css by hand: it's 4 values)
-  const BLACK = "#0D0D0B", GOLD = "#D1A90A", WHITE = "#FFFFFF";
-
+  /* ---------------- styles (self-contained; works on any site) ---------------- */
   const css = `
-  .eco-bar{position:relative;z-index:9999;background:${BLACK};color:${WHITE};
-    font:500 13px/1 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
-    border-bottom:1px solid rgba(209,169,10,.35)}
-  .eco-bar *{box-sizing:border-box}
-  .eco-in{max-width:1180px;margin:0 auto;padding:0 16px;height:40px;display:flex;align-items:center;gap:14px}
-  .eco-mark{display:flex;align-items:center;gap:8px;text-decoration:none;color:${WHITE};font-weight:700;letter-spacing:.02em;flex:none}
-  .eco-mark i{width:18px;height:18px;border-radius:6px;background:${GOLD};display:grid;place-items:center;
-    font:800 10px/1 system-ui;color:${BLACK};font-style:normal}
-  .eco-links{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
-  .eco-links::-webkit-scrollbar{display:none}
-  .eco-links a{color:rgba(255,255,255,.72);text-decoration:none;padding:7px 11px;border-radius:999px;white-space:nowrap;transition:color .15s,background .15s}
-  .eco-links a:hover{color:${WHITE};background:rgba(255,255,255,.08)}
-  .eco-links a.on{background:${GOLD};color:${BLACK};font-weight:600}
-  .eco-links a:focus-visible{outline:2px solid ${GOLD};outline-offset:2px}
-  @media (max-width:560px){ .eco-mark span{display:none} .eco-in{gap:8px;padding:0 10px} }`;
-
+  .mdnav{position:fixed; right:18px; bottom:18px; z-index:9999; font:500 14px/1.2 "Instrument Sans",system-ui,sans-serif}
+  .mdnav *{box-sizing:border-box}
+  .mdnav-btn{width:48px; height:48px; border-radius:50%; border:0; cursor:pointer; display:grid; place-items:center;
+    background:#0D0D0B; color:#D1A90A; font:700 15px "Fraunces",Georgia,serif; letter-spacing:-.02em;
+    box-shadow:0 0 0 2px #D1A90A, 0 12px 30px -10px rgba(0,0,0,.6);
+    transition:transform .35s cubic-bezier(.2,.8,.2,1), opacity .35s, width .35s, height .35s, box-shadow .35s}
+  html[data-theme="dark"] .mdnav-btn{background:#D1A90A; color:#0D0D0B; box-shadow:0 0 0 2px #0D0D0B, 0 12px 30px -10px rgba(0,0,0,.8)}
+  .mdnav-btn:hover{transform:scale(1.06)}
+  .mdnav-btn:focus-visible{outline:3px solid #D1A90A; outline-offset:3px}
+  /* asleep: a small gold dot with a bigger invisible hit area */
+  .mdnav.asleep .mdnav-btn{width:14px; height:14px; font-size:0; opacity:.75; background:#D1A90A; box-shadow:0 0 0 3px rgba(209,169,10,.25)}
+  .mdnav.asleep::after{content:""; position:absolute; right:-14px; bottom:-14px; width:60px; height:60px}
+  .mdnav-panel{position:absolute; right:0; bottom:62px; min-width:210px; padding:8px; border-radius:20px;
+    background:#0D0D0B; color:#F3F1EA; border:1px solid #2A2A26; box-shadow:0 24px 50px -18px rgba(0,0,0,.7);
+    opacity:0; transform:translateY(8px) scale(.97); transform-origin:bottom right; pointer-events:none; transition:opacity .2s, transform .2s}
+  .mdnav.open .mdnav-panel{opacity:1; transform:none; pointer-events:auto}
+  .mdnav-panel a{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 12px; border-radius:12px; color:inherit; text-decoration:none}
+  .mdnav-panel a:hover,.mdnav-panel a:focus-visible{background:#1E1E1A; outline:none}
+  .mdnav-panel a[aria-current="page"]{background:#D1A90A; color:#0D0D0B}
+  .mdnav-panel a small{font:500 11px "IBM Plex Mono",monospace; opacity:.6}
+  .mdnav-sep{height:1px; background:#2A2A26; margin:6px 4px}
+  .mdnav-theme{display:flex; width:100%; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border:0; border-radius:12px; background:transparent; color:inherit; font:inherit; cursor:pointer}
+  .mdnav-theme:hover,.mdnav-theme:focus-visible{background:#1E1E1A; outline:none}
+  .mdnav-switch{position:relative; width:44px; height:24px; border-radius:999px; background:#2A2A26; flex:none}
+  .mdnav-switch i{position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#F3F1EA; transition:transform .25s; display:grid; place-items:center; font-style:normal; font-size:11px}
+  html[data-theme="dark"] .mdnav-switch{background:#D1A90A}
+  html[data-theme="dark"] .mdnav-switch i{transform:translateX(20px); background:#0D0D0B; color:#D1A90A}
+  @media (prefers-reduced-motion:reduce){.mdnav *{transition:none !important}}
+  @media print{.mdnav{display:none}}`;
   const style = document.createElement("style");
   style.textContent = css;
   document.head.appendChild(style);
 
-  const bar = document.createElement("nav");
-  bar.className = "eco-bar";
-  bar.setAttribute("aria-label", "Mazi David sites");
-  bar.innerHTML = `
-    <div class="eco-in">
-      <a class="eco-mark" href="https://mazidavid.com"><i>MD</i><span>Mazi David</span></a>
-      <div class="eco-links">
-        ${LINKS.map(l => `<a href="${l.href}" class="${l.id === current ? "on" : ""}" ${l.id === current ? 'aria-current="page"' : ""}>${l.label}</a>`).join("")}
-      </div>
-    </div>`;
+  /* ---------------- markup ---------------- */
+  const nav = document.createElement("nav");
+  nav.className = "mdnav";
+  nav.setAttribute("aria-label", "Mazi David sites");
+  const items = [
+    ...extra.map((l) => `<a href="${l.href}">${l.label}</a>`),
+    ...(extra.length ? ['<div class="mdnav-sep"></div>'] : []),
+    ...LINKS.map((l) => `<a href="${l.href}"${l.id === current ? ' aria-current="page"' : ""}>${l.label}${l.id === current ? "<small>here</small>" : ""}</a>`),
+  ].join("");
+  nav.innerHTML = `
+    <div class="mdnav-panel" id="mdnav-panel">${items}
+      <div class="mdnav-sep"></div>
+      <button class="mdnav-theme" type="button" aria-label="Switch light or dark mode"><span class="mdnav-label"></span><span class="mdnav-switch"><i></i></span></button>
+    </div>
+    <button class="mdnav-btn" type="button" aria-expanded="false" aria-controls="mdnav-panel" aria-label="Open site menu">MD</button>`;
+  const mount = () => document.body.appendChild(nav);
+  document.body ? mount() : document.addEventListener("DOMContentLoaded", mount);
 
-  // Insert as the very first thing in <body> (works whether we run early or deferred)
-  const place = () => document.body.insertBefore(bar, document.body.firstChild);
-  document.body ? place() : document.addEventListener("DOMContentLoaded", place);
+  const btn = nav.querySelector(".mdnav-btn");
+  const themeBtn = nav.querySelector(".mdnav-theme");
+  function paintToggle() {
+    const dark = document.documentElement.dataset.theme === "dark";
+    nav.querySelector(".mdnav-label").textContent = dark ? "Dark mode" : "Light mode";
+    nav.querySelector(".mdnav-switch i").textContent = dark ? "☾" : "☀";
+  }
+  paintToggle();
+  themeBtn.addEventListener("click", () => window.mdTheme.toggle());
 
-  // Keep the active pill visible on small screens
-  // (scroll only the link strip, never the page)
-  requestAnimationFrame(() => {
-    const strip = bar.querySelector(".eco-links"), on = bar.querySelector("a.on");
-    if (strip && on) strip.scrollLeft = on.offsetLeft - strip.clientWidth / 2 + on.clientWidth / 2;
-  });
+  /* ---------------- open / close ---------------- */
+  const setOpen = (o) => { nav.classList.toggle("open", o); btn.setAttribute("aria-expanded", String(o)); if (o) wake(); };
+  btn.addEventListener("click", (e) => { e.stopPropagation(); setOpen(!nav.classList.contains("open")); });
+  document.addEventListener("click", (e) => { if (!nav.contains(e.target)) setOpen(false); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
+
+  /* ---------------- sleep / wake ----------------
+     Shrinks to a dot after 2.5s idle. Wakes when the mouse comes within
+     160px of the corner, on focus, or when the visitor scrolls back up.  */
+  let timer;
+  function sleep() { if (!nav.classList.contains("open") && !nav.contains(document.activeElement)) nav.classList.add("asleep"); }
+  function wake() { nav.classList.remove("asleep"); clearTimeout(timer); timer = setTimeout(sleep, 2500); }
+  wake();
+  addEventListener("pointermove", (e) => {
+    if (innerWidth - e.clientX < 160 && innerHeight - e.clientY < 160) wake();
+  }, { passive: true });
+  let lastY = scrollY;
+  addEventListener("scroll", () => { if (scrollY < lastY - 40) wake(); lastY = scrollY; }, { passive: true });
+  nav.addEventListener("focusin", wake);
+  nav.addEventListener("pointerenter", wake);
 })();

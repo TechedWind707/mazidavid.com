@@ -1,7 +1,7 @@
 /* =====================================================================
    /api/board: the /me board (your notes + visitors' notes)
    ---------------------------------------------------------------------
-   GET  /api/board   → { notes:[...], visitors:[...] }
+   GET  /api/board   → { notes, edges, reactions, visitors, timeline, profile }
         notes     = your notes (markdown + tags), hidden ones excluded
         visitors  = ONLY approved visitor notes (pending ones stay private)
 
@@ -32,15 +32,34 @@ export default async function handler(req, res) {
 async function list(res) {
   try {
     const sql = db();
-    const [notes, visitors] = await Promise.all([
-      sql`select id, kind, title, body_md, tags, pinned, to_char(note_date, 'YYYY-MM-DD') as date
+    // One round of parallel queries for the whole page: notes (with their
+    // board positions), the lines between them, reaction counts, approved
+    // visitor notes, the timeline and the profile block at the top.
+    const [notes, edges, reacts, visitors, timeline, settings] = await Promise.all([
+      sql`select id, kind, title, body_md, tags, pinned, x, y, to_char(note_date, 'YYYY-MM-DD') as date
           from board_notes where hidden = false
           order by pinned desc, note_date desc, id desc`,
+      sql`select e.id, e.from_id, e.to_id, e.label from board_edges e
+          join board_notes a on a.id = e.from_id and a.hidden = false
+          join board_notes b on b.id = e.to_id and b.hidden = false`,
+      sql`select note_id, emoji, count from note_reactions where count > 0`,
       sql`select id, name, body, to_char(approved_at, 'YYYY-MM-DD') as date
           from visitor_notes where status = 'approved'
           order by approved_at desc limit 60`,
+      sql`select id, when_label, title, body, image_url, image_alt from timeline_items
+          where hidden = false order by sort_key asc, id asc`,
+      sql`select value from site_settings where key = 'profile'`,
     ]);
-    return send(res, 200, { notes, visitors }, {
+    // Neon returns bigint ids as strings; the board wants numbers
+    const num = (v) => (v == null ? null : Number(v));
+    const reactions = {};
+    for (const r of reacts) (reactions[num(r.note_id)] ||= {})[r.emoji] = r.count;
+    return send(res, 200, {
+      notes: notes.map((n) => ({ ...n, id: num(n.id), x: num(n.x), y: num(n.y) })),
+      edges: edges.map((e) => ({ id: num(e.id), from_id: num(e.from_id), to_id: num(e.to_id), label: e.label })),
+      reactions, visitors, timeline,
+      profile: settings[0]?.value || null,
+    }, {
       "Cache-Control": "public, max-age=0, s-maxage=30, stale-while-revalidate=300",
     });
   } catch (err) {

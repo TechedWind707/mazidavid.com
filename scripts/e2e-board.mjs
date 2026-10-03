@@ -1,0 +1,26 @@
+// Extra checks for the board/timeline/reactions/admin-layout endpoints.
+import { readFileSync } from "node:fs";
+import { createHmac } from "node:crypto";
+const txt = readFileSync("ADMIN-SECRETS.txt", "utf8");
+const get = (k) => txt.match(new RegExp(`^${k}=(.*)$`, "m"))?.[1] ?? txt.match(new RegExp(`${k}:\\s+(\\S+)`))?.[1];
+const B = process.env.BASE || "http://localhost:3000", O = { Origin: process.env.ORIGIN || B, "Content-Type": "application/json" };
+const b32 = (s) => { const a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"; let bits = ""; for (const c of s) bits += a.indexOf(c).toString(2).padStart(5, "0"); const out = []; for (let i = 0; i + 8 <= bits.length; i += 8) out.push(parseInt(bits.slice(i, i + 8), 2)); return Buffer.from(out); };
+const code = () => { const m = Buffer.alloc(8); m.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30000))); const h = createHmac("sha1", b32(get("ADMIN_TOTP_SECRET"))).update(m).digest(); const o = h[19] & 15; return String((((h[o] & 127) << 24) | (h[o+1] << 16) | (h[o+2] << 8) | h[o+3]) % 1e6).padStart(6, "0"); };
+const j = async (p, opt = {}) => { const r = await fetch(B + p, opt); return [r.status, await r.json().catch(() => null), r.headers.get("set-cookie")]; };
+const ok = (n, c) => console.log((c ? "PASS " : "FAIL ") + n);
+let [s, d] = await j("/api/board");
+ok(`board: ${d?.notes?.length} notes, ${d?.edges?.length} edges, ${d?.timeline?.length} timeline, profile=${!!d?.profile}`, s === 200 && d.edges.length > 5 && d.timeline.length > 5 && d.notes.every(n => typeof n.x === "number"));
+const nid = d.notes[0].id;
+[s, d] = await j("/api/react", { method: "POST", headers: O, body: JSON.stringify({ note_id: nid, emoji: "fire" }) }); ok("react counted", s === 200 && d.counted);
+[s, d] = await j("/api/react", { method: "POST", headers: O, body: JSON.stringify({ note_id: nid, emoji: "fire" }) }); ok("same react again not counted", s === 200 && d.counted === false);
+[s] = await j("/api/react", { method: "POST", headers: O, body: JSON.stringify({ note_id: nid, emoji: "poop" }) }); ok("bad emoji → 400", s === 400);
+[s] = await j("/api/react", { method: "POST", headers: { ...O, Origin: "https://evil.example" }, body: JSON.stringify({ note_id: nid, emoji: "heart" }) }); ok("react other origin → 403", s === 403);
+let cookie; [s, d, cookie] = await j("/api/auth", { method: "POST", headers: O, body: JSON.stringify({ action: "login", password: get("Password"), code: code() }) }); ok("login", s === 200);
+const C = { Cookie: cookie.split(";")[0], "user-agent": "node" }, CA = { ...C, ...O };
+[s, d] = await j("/api/admin?r=notes", { headers: C }); const n0 = d.notes[0]; ok("admin notes ids are numbers", typeof n0.id === "number");
+[s] = await j("/api/admin?r=layout", { method: "PUT", headers: CA, body: JSON.stringify({ positions: [{ id: n0.id, x: Number(n0.x), y: Number(n0.y) }] }) }); ok("layout save", s === 200);
+[s, d] = await j("/api/admin?r=edges", { method: "POST", headers: CA, body: JSON.stringify({ from_id: n0.id, to_id: n0.id, label: "x" }) }); ok("self edge rejected", s === 400);
+[s, d] = await j("/api/admin?r=timeline", { method: "POST", headers: CA, body: JSON.stringify({ title: "E2E", sort_key: "2099-01", image_url: "javascript:alert(1)" }) }); const tid = d?.id;
+[s, d] = await j("/api/admin?r=timeline", { headers: C }); const t = d.timeline.find(x => x.id === tid); ok("timeline create strips bad image url", t && t.image_url === "");
+[s] = await j(`/api/admin?r=timeline&id=${tid}`, { method: "DELETE", headers: CA }); ok("timeline delete", s === 200);
+[s, d] = await j("/api/admin?r=settings", { headers: C }); ok("settings get", s === 200 && Array.isArray(d.profile.roles));

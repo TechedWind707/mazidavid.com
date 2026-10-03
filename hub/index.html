@@ -12,10 +12,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/tokens.css">
+<script src="/assets/eco-nav.js" data-current="home" data-default="dark"></script>
 <style>
 /* =====================================================================
    HUB (mazidavid.com) — the front door to everything.
-   Dark page: black + white, gold as the light. One rose touch (the /me door).
+   Dark by default (light mode via the floating MD menu): gold as the light. One rose touch (the /me door).
    Each door shows something LIVE from its site so the hub never goes stale:
      Work    -> project count from content.js
      Blog    -> latest posts fetched from Hashnode (falls back to content.js)
@@ -23,7 +24,7 @@
    ===================================================================== */
 .hello{padding:84px 0 40px; position:relative}
 .hello h1{font-size:clamp(44px,7vw,92px); max-width:13ch}
-.hello h1 em{font-style:italic; color:var(--gold)}
+.hello h1 em{font-style:italic; color:var(--accent-fg)}
 .hello p{font-size:19px; color:var(--muted-dark); max-width:56ch; margin:22px 0 0}
 .hello .fact{font:500 13px var(--mono); color:var(--muted-dark); margin-top:18px}
 /* a slow gold glow behind the headline */
@@ -35,18 +36,18 @@
 /* doors */
 .doors{display:grid; grid-template-columns:repeat(6,1fr); gap:16px; margin-top:24px}
 .door{grid-column:span 2; position:relative; display:flex; flex-direction:column; gap:10px; min-height:250px; padding:26px;
-  border-radius:var(--r-xl); text-decoration:none; color:var(--white); background:var(--surface-dark); border:1px solid var(--line-dark);
+  border-radius:var(--r-xl); text-decoration:none; color:var(--fg); background:var(--surface); border:1px solid var(--hair);
   transition:transform .2s, border-color .2s, background .2s; overflow:hidden}
-.door:hover{transform:translateY(-4px); border-color:var(--gold); background:#1b1a15}
+.door:hover{transform:translateY(-4px); border-color:var(--gold); background:var(--surface-2)}
 .door.big{grid-column:span 3}
-.door .k{font:500 12px var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--gold)}
+.door .k{font:500 12px var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-fg)}
 .door h2{font:500 36px/1 var(--serif); letter-spacing:-.02em; margin:auto 0 0}
 .door p{margin:0; color:var(--muted-dark); font-size:15px}
-.door .live{font:500 13px var(--mono); color:var(--white); display:flex; gap:8px; align-items:center}
+.door .live{font:500 13px var(--mono); color:var(--fg); display:flex; gap:8px; align-items:center}
 .door .live::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--gold); animation:pulse 2s infinite}
 @keyframes pulse{50%{opacity:.3}}
 .door ul{list-style:none; margin:0; padding:0; display:grid; gap:6px}
-.door li{font-size:14px; color:#e9e7df; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.door li{font-size:14px; color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .door li span{color:var(--muted-dark); font:12px var(--mono); margin-right:8px}
 /* the gold door = Work (the one recruiters should hit first) */
 .door.work{background:var(--gold); color:var(--black); border-color:var(--gold)}
@@ -55,9 +56,9 @@
 .door.work:hover{background:#dcb320}
 /* the rose door = Me (the only rose on the page) */
 .door.me{border-color:rgba(231,163,181,.35)}
-.door.me .k{color:var(--rose)}
+.door.me .k{color:var(--rose-fg)}
 .door.me:hover{border-color:var(--rose)}
-.door.services .k{color:#9db36b}  /* ripe olive, lifted for dark bg */
+.door.services .k{color:var(--olive-fg)}
 
 .arrow{position:absolute; right:22px; top:22px; font-size:22px; transition:transform .2s}
 .door:hover .arrow{transform:translate(4px,-4px)}
@@ -67,14 +68,13 @@
 /* "Everywhere else" row: round pills, gold on hover */
 .elsewhere{margin-top:44px}
 .elsewhere .pills{display:flex; flex-wrap:wrap; gap:10px}
-.elsewhere a{display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:var(--r-pill); border:1px solid var(--line-dark); background:var(--surface-dark); color:var(--white); text-decoration:none; font:500 14px var(--sans); transition:border-color .2s, transform .2s}
+.elsewhere a{display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:var(--r-pill); border:1px solid var(--hair); background:var(--surface); color:var(--fg); text-decoration:none; font:500 14px var(--sans); transition:border-color .2s, transform .2s}
 .elsewhere a:hover{border-color:var(--gold); transform:translateY(-2px)}
 .elsewhere a small{font:500 12px var(--mono); color:var(--muted-dark)}
 .elsewhere a.rz{border-color:var(--rose)}
 </style>
 </head>
-<body class="dark">
-<script src="/assets/eco-nav.js" data-current="home"></script>
+<body>
 
 <main class="wrap">
   <section class="hello">

@@ -63,7 +63,7 @@ $$("#tabs button").forEach((b) => (b.onclick = () => loadTab(b.dataset.tab)));
 function loadTab(tab) {
   $$("#tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
   $$("[data-panel]").forEach((p) => (p.hidden = p.dataset.panel !== tab));
-  ({ projects: loadProjects, notes: loadNotes, visitors: loadVisitors, audit: loadAudit })[tab]();
+  ({ projects: loadProjects, notes: loadNotes, layout: loadLayout, timeline: loadTimeline, profile: loadProfile, visitors: loadVisitors, audit: loadAudit })[tab]();
 }
 
 /* ============================= PROJECTS ============================ */
@@ -213,20 +213,32 @@ $("#addPost").onclick = async () => {
   } catch { picker.textContent = "Couldn't reach Hashnode. Use + Link instead."; }
 };
 
-$("#addPhoto").onclick = async () => {
-  picker.hidden = false; picker.textContent = "Loading photos…";
+/* Shared gallery picker: fills `box` with thumbnails, calls pick({url,title}) */
+async function galleryPicker(box, pick) {
+  box.hidden = false; box.textContent = "Loading photos…";
   try {
     if (!photoCache) photoCache = (await (await fetch("https://gallery.mazidavid.com/assets/gallery-data.json")).json()).photos;
-    picker.innerHTML = `<div class="photos"></div>`;
+    box.innerHTML = `<div class="photos"></div>`;
     [...photoCache].sort((a, b) => (b.date || "").localeCompare(a.date || "")).forEach((p) => {
       const url = `https://gallery.mazidavid.com/${p.image}`;
       const b = document.createElement("button"); b.type = "button"; b.title = p.displayName || p.date;
       const img = document.createElement("img"); img.loading = "lazy"; img.src = url; img.alt = "";
       b.append(img);
-      b.onclick = () => { tags.push({ type: "photo", url, title: p.caption || p.displayName || `Photo, ${p.date}`, image: url }); renderTags(); picker.hidden = true; };
-      $(".photos", picker).append(b);
+      b.onclick = () => { pick({ url, title: p.caption || p.displayName || `Photo, ${p.date}` }); box.hidden = true; };
+      $(".photos", box).append(b);
     });
-  } catch { picker.textContent = "Couldn't load the gallery index."; }
+  } catch { box.textContent = "Couldn't load the gallery index."; }
+}
+$("#addPhoto").onclick = () => galleryPicker(picker, ({ url, title }) => { tags.push({ type: "photo", url, title, image: url }); renderTags(); });
+
+$("#addVideo").onclick = () => {
+  picker.hidden = false;
+  picker.innerHTML = `<div class="linkform"><input placeholder="YouTube (or any video) link: https://…" id="vdUrl" type="url"><input placeholder="Title (optional)" id="vdTitle"><button class="btn sm" type="button" id="vdAdd">Attach video</button></div>`;
+  $("#vdAdd").onclick = () => {
+    const url = $("#vdUrl").value.trim();
+    if (!/^https:\/\//.test(url)) { $("#vdUrl").focus(); return; }
+    tags.push({ type: "video", url, title: $("#vdTitle").value.trim(), image: "" }); renderTags(); picker.hidden = true;
+  };
 };
 
 $("#addLink").onclick = () => {
@@ -238,6 +250,136 @@ $("#addLink").onclick = () => {
     tags.push({ type: "link", url, title: $("#lkTitle").value.trim(), image: "" }); renderTags(); picker.hidden = true;
   };
 };
+
+/* =========================== BOARD LAYOUT ========================== */
+/* The same board engine visitors see (assets/board.js) in "edit" mode.
+   Moving a note just marks the layout dirty; Save sends every position. */
+let layoutBoard = null, layoutNotes = [], layoutEdges = [], layoutDirty = false, pendingPair = null;
+const noteName = (id) => { const n = layoutNotes.find((x) => x.id === id); return n ? (n.title || n.body_md.slice(0, 30) || `#${id}`) : `#${id}`; };
+
+async function loadLayout() {
+  const [n, e] = await Promise.all([api("/api/admin?r=notes"), api("/api/admin?r=edges")]);
+  layoutNotes = n.notes.filter((x) => !x.hidden).map((x) => ({ ...x, x: x.x == null ? null : Number(x.x), y: x.y == null ? null : Number(x.y) }));
+  layoutEdges = e.edges;
+  const data = { notes: layoutNotes, edges: layoutEdges };
+  if (!layoutBoard) {
+    layoutBoard = MDBoard.create($("#layoutBoard"), {
+      mode: "edit", ...data,
+      renderBody: (x) => `<div class="k">${esc(x.kind)}</div><h3>${esc(x.title || "Untitled")}</h3><div class="md">${md(x.body_md).slice(0, 400)}</div>`,
+      onMove: () => { layoutDirty = true; say($("#layoutMsg"), "Unsaved changes: press Save layout.", false); },
+      onConnect: (a, b) => {
+        pendingPair = [a, b];
+        $("#pendingEdge").hidden = false;
+        $("#pendingNames").textContent = `${noteName(a)}  ↔  ${noteName(b)}`;
+        $("#pendingLabel").value = ""; $("#pendingLabel").focus();
+      },
+    });
+  } else layoutBoard.setData(data);
+  requestAnimationFrame(() => layoutBoard.fit());
+  renderEdgeList();
+}
+
+$("#connectBtn").onclick = () => {
+  const on = !$("#connectBtn").classList.contains("on");
+  $("#connectBtn").classList.toggle("on", on);
+  $("#connectBtn").textContent = on ? "Connecting… (click 2 notes)" : "Connect two notes";
+  layoutBoard?.setConnectMode(on);
+};
+$("#saveLayout").onclick = async () => {
+  try {
+    await api("/api/admin?r=layout", "PUT", { positions: layoutBoard.positions().filter((p) => Number.isFinite(p.x)) });
+    layoutDirty = false; say($("#layoutMsg"), "Layout saved. Visitors will see this arrangement.");
+  } catch (err) { say($("#layoutMsg"), err.message, false); }
+};
+$("#pendingCancel").onclick = () => { pendingPair = null; $("#pendingEdge").hidden = true; };
+$("#pendingAdd").onclick = async () => {
+  if (!pendingPair) return;
+  try {
+    // Save positions first so the new line is drawn where you see it
+    if (layoutDirty) await api("/api/admin?r=layout", "PUT", { positions: layoutBoard.positions() });
+    await api("/api/admin?r=edges", "POST", { from_id: pendingPair[0], to_id: pendingPair[1], label: $("#pendingLabel").value });
+    pendingPair = null; $("#pendingEdge").hidden = true; layoutDirty = false;
+    say($("#layoutMsg"), "Line added.");
+    await loadLayout();
+  } catch (err) { say($("#layoutMsg"), err.message, false); }
+};
+window.addEventListener("beforeunload", (e) => { if (layoutDirty) e.preventDefault(); });
+
+function renderEdgeList() {
+  $("#edgeCount").textContent = `(${layoutEdges.length})`;
+  const box = $("#edgeList"); box.innerHTML = layoutEdges.length ? "" : `<p class="empty">No lines yet.</p>`;
+  layoutEdges.forEach((e) => {
+    const row = document.createElement("div"); row.className = "edge-row";
+    row.innerHTML = `<div class="names"><span></span><button type="button" title="Delete line">×</button></div><input maxlength="60" placeholder="tiny note on the line">`;
+    $("span", row).textContent = `${noteName(e.from_id)} ↔ ${noteName(e.to_id)}`;
+    const input = $("input", row); input.value = e.label || "";
+    input.onchange = async () => { await api(`/api/admin?r=edges&id=${e.id}`, "PUT", { label: input.value }); e.label = input.value; layoutBoard.setData({ notes: layoutBoard.positions().map((p) => ({ ...layoutNotes.find((n) => n.id === p.id), ...p })), edges: layoutEdges }); };
+    $("button", row).onclick = async () => { await api(`/api/admin?r=edges&id=${e.id}`, "DELETE"); await loadLayout(); };
+    row.onmouseenter = () => layoutBoard.focus(e.from_id);
+    row.onmouseleave = () => layoutBoard.focus(null);
+    box.append(row);
+  });
+}
+
+/* ============================== TIMELINE =========================== */
+let tlItems = [], editingTl = null;
+const tf = $("#tlForm");
+async function loadTimeline() {
+  tlItems = (await api("/api/admin?r=timeline")).timeline;
+  $("#tlList").innerHTML = tlItems.map((t) => `
+    <button class="item ${t.hidden ? "hidden-item" : ""} ${editingTl === t.id ? "on" : ""}" data-id="${t.id}">
+      <b>${esc(t.title)}</b><span class="meta" style="grid-column:auto">${esc(t.when_label)}</span>
+      <span class="meta">sort ${esc(t.sort_key)}${t.image_url ? " · has picture" : ""}${t.hidden ? " · hidden" : ""}</span>
+    </button>`).join("");
+  $$("#tlList .item").forEach((b) => (b.onclick = () => openTl(tlItems.find((t) => t.id === Number(b.dataset.id)))));
+}
+function showTlPreview() { const u = tf.image_url.value.trim(); $("#tlPreview").hidden = !u; if (u) $("#tlPreview").src = u; }
+function openTl(t) {
+  editingTl = t ? t.id : null;
+  $$("#tlList .item").forEach((b) => b.classList.toggle("on", Number(b.dataset.id) === editingTl));
+  tf.hidden = false; $("#tlMsg").textContent = ""; $("#tlPicker").hidden = true;
+  $("#tlTitle").textContent = t ? "Edit point" : "New point";
+  const v = t || { when_label: "", sort_key: new Date().toISOString().slice(0, 7), title: "", body: "", image_url: "", image_alt: "", hidden: false };
+  for (const k of ["when_label", "sort_key", "title", "body", "image_url", "image_alt"]) tf[k].value = v[k] || "";
+  tf.hidden.checked = !!v.hidden;
+  $("#deleteTl").hidden = !t; showTlPreview(); tf.title.focus();
+}
+$("#newTl").onclick = () => openTl(null);
+$("[data-cancel]", tf).onclick = () => { tf.hidden = true; editingTl = null; loadTimeline(); };
+tf.image_url.addEventListener("input", showTlPreview);
+$("#tlPickPhoto").onclick = () => galleryPicker($("#tlPicker"), ({ url, title }) => { tf.image_url.value = url; if (!tf.image_alt.value) tf.image_alt.value = title; showTlPreview(); });
+$("#tlClearPhoto").onclick = () => { tf.image_url.value = ""; showTlPreview(); };
+tf.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const data = { when_label: tf.when_label.value, sort_key: tf.sort_key.value.trim(), title: tf.title.value, body: tf.body.value, image_url: tf.image_url.value.trim(), image_alt: tf.image_alt.value, hidden: tf.hidden.checked };
+  try {
+    if (editingTl) await api(`/api/admin?r=timeline&id=${editingTl}`, "PUT", data);
+    else { const r = await api("/api/admin?r=timeline", "POST", data); editingTl = r.id; }
+    await loadTimeline(); openTl(tlItems.find((t) => t.id === editingTl));
+    say($("#tlMsg"), "Saved.");
+  } catch (err) { say($("#tlMsg"), err.message, false); }
+});
+armDelete($("#deleteTl"), async () => { await api(`/api/admin?r=timeline&id=${editingTl}`, "DELETE"); tf.hidden = true; editingTl = null; loadTimeline(); });
+
+/* ============================== PROFILE ============================ */
+const pf2 = $("#profileForm");
+function showPfPreview() { const u = pf2.photo_url.value.trim(); $("#pfPreview").hidden = !u; if (u) $("#pfPreview").src = u; }
+async function loadProfile() {
+  const p = (await api("/api/admin?r=settings")).profile || {};
+  pf2.photo_url.value = p.photo_url || ""; pf2.photo_alt.value = p.photo_alt || "";
+  pf2.greeting.value = p.greeting || ""; pf2.bio.value = p.bio || ""; pf2.roles.value = (p.roles || []).join("\n");
+  showPfPreview();
+}
+pf2.photo_url.addEventListener("input", showPfPreview);
+$("#pfPick").onclick = () => galleryPicker($("#pfPicker"), ({ url }) => { pf2.photo_url.value = url; showPfPreview(); });
+$("#pfClear").onclick = () => { pf2.photo_url.value = ""; showPfPreview(); };
+pf2.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try {
+    await api("/api/admin?r=settings", "PUT", { photo_url: pf2.photo_url.value.trim(), photo_alt: pf2.photo_alt.value, greeting: pf2.greeting.value, bio: pf2.bio.value, roles: pf2.roles.value.split("\n").map((x) => x.trim()).filter(Boolean) });
+    say($("#pfMsg"), "Saved. me.mazidavid.com updates within a minute.");
+  } catch (err) { say($("#pfMsg"), err.message, false); }
+});
 
 /* ============================= VISITORS ============================ */
 let vStatus = "pending";

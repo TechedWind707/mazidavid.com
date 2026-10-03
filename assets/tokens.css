@@ -1,41 +1,30 @@
 /* =====================================================================
-   tokens.css — the mazidavid.com design system (shared by hub, work, me)
+   tokens.css — the mazidavid.com design system (hub, work, me, admin)
    ---------------------------------------------------------------------
    YOUR PALETTE: black · gold #D1A90A · white · ripe olive · rose (rare)
 
-   Contrast rules (checked, WCAG AA needs 4.5:1 for body text):
-     gold #D1A90A on black ......... 8.7  ✓  use freely on dark surfaces
-     gold #D1A90A on white ......... 2.2  ✗  NEVER as text on white;
-                                          use --gold-deep #7A6000 (6.0) instead,
-                                          or gold as a FILL behind black text
-     olive #556B2F on white ........ 5.9  ✓  links, tags, status on light pages
-     rose  #E7A3B5 on black ........ 9.5  ✓  rare highlights on dark
-     rose-deep #B0306A on white .... 6.0  ✓  if rose ever needs to be text on white
-   Rose is the "seasoning": one or two touches per page, max.
+   LIGHT + DARK MODE
+   Every page has <html data-theme="light|dark">, set by eco-nav.js
+   from (1) the visitor's choice, saved in a cookie shared by all
+   *.mazidavid.com sites, or (2) the page's own default.
+   Components never use raw colours for text/backgrounds; they use the
+   SEMANTIC tokens below, which flip with the theme:
+
+     --bg        page background         --fg        main text
+     --surface   cards                   --fg-2      secondary text
+     --surface-2 inset panels            --hair      hairlines
+     --accent-fg gold you can read       --olive-fg  olive you can read
+     --rose-fg   rose you can read       --wash-*    soft tinted fills
+
+   Contrast (WCAG AA = 4.5:1 for body text), checked for both themes:
+     light: --accent-fg #7A6000 on white 6.0 · --olive-fg #3E4F21 8.9
+     dark:  --accent-fg #D1A90A on #0D0D0B 8.7 · --olive-fg #A9C26F 9.3
+   Raw --gold / --black / --white stay fixed: use them for FILLS
+   (gold button with black text etc.), never for theme text.
    ===================================================================== */
 :root{
-  /* core five */
-  --black:#0D0D0B;
-  --gold:#D1A90A;
-  --white:#FFFFFF;
-  --olive:#556B2F;
-  --rose:#E7A3B5;
-
-  /* helpers derived from the five (tints/shades, not new colours) */
-  --ink:var(--black);            /* main text on light pages          */
-  --paper:var(--white);          /* main background on light pages    */
-  --paper-2:#F6F5F0;             /* inset panels (white, warmed)      */
-  --line:#E6E4DC;                /* hairlines on white                */
-  --line-dark:#2A2A26;           /* hairlines on black                */
-  --muted:#5E5E57;               /* secondary text on white (6.5:1)   */
-  --muted-dark:#A8A69C;          /* secondary text on black           */
-  --gold-deep:#7A6000;           /* gold that is legible ON WHITE      */
-  --gold-wash:#FBF4D8;           /* soft gold fill                    */
-  --olive-deep:#3E4F21;
-  --olive-wash:#EEF1E6;
-  --rose-deep:#B0306A;
-  --rose-wash:#FBEEF2;
-  --surface-dark:#161613;        /* cards on black                    */
+  /* core five (fixed, never flip) */
+  --black:#0D0D0B; --gold:#D1A90A; --white:#FFFFFF; --olive:#556B2F; --rose:#E7A3B5;
 
   /* type */
   --serif:"Fraunces", Georgia, "Times New Roman", serif;
@@ -43,16 +32,43 @@
   --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
   --hand:"Caveat", cursive;
 
-  /* shape: generously round, as you asked */
+  /* shape: generously round */
   --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:28px; --r-pill:999px;
-  --shadow:0 1px 2px rgba(13,13,11,.06), 0 10px 26px -14px rgba(13,13,11,.35);
-  --shadow-lift:0 2px 3px rgba(13,13,11,.08), 0 26px 44px -20px rgba(13,13,11,.5);
   --wrap:1120px;
 }
 
+/* ---------- LIGHT (default when nothing else is set) ---------- */
+:root, :root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#FFFFFF; --fg:#0D0D0B; --fg-2:#5E5E57;
+  --surface:#FFFFFF; --surface-2:#F6F5F0; --hair:#E6E4DC;
+  --accent-fg:#7A6000; --olive-fg:#3E4F21; --rose-fg:#B0306A;
+  --wash-gold:#FBF4D8; --wash-olive:#EEF1E6; --wash-rose:#FBEEF2;
+  --shadow:0 1px 2px rgba(13,13,11,.06), 0 10px 26px -14px rgba(13,13,11,.35);
+  --shadow-lift:0 2px 3px rgba(13,13,11,.08), 0 26px 44px -20px rgba(13,13,11,.5);
+}
+/* ---------- DARK ---------- */
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0D0D0B; --fg:#F3F1EA; --fg-2:#A8A69C;
+  --surface:#161613; --surface-2:#1C1C18; --hair:#2A2A26;
+  --accent-fg:#D1A90A; --olive-fg:#A9C26F; --rose-fg:#E7A3B5;
+  --wash-gold:#2E2608; --wash-olive:#232B17; --wash-rose:#3A1F28;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 14px 30px -16px rgba(0,0,0,.8);
+  --shadow-lift:0 2px 3px rgba(0,0,0,.5), 0 28px 48px -20px rgba(0,0,0,.9);
+}
+/* Older names, kept as aliases so existing CSS keeps working */
+:root{
+  --ink:var(--fg); --paper:var(--bg); --paper-2:var(--surface-2); --line:var(--hair);
+  --muted:var(--fg-2); --line-dark:var(--hair); --muted-dark:var(--fg-2); --surface-dark:var(--surface);
+  --gold-deep:var(--accent-fg); --gold-wash:var(--wash-gold);
+  --olive-deep:var(--olive-fg); --olive-wash:var(--wash-olive);
+  --rose-deep:var(--rose-fg); --rose-wash:var(--wash-rose);
+}
+
 *,*::before,*::after{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0; font:16px/1.6 var(--sans); -webkit-font-smoothing:antialiased; background:var(--paper); color:var(--ink)}
+html{scroll-behavior:smooth; background:var(--bg)}
+body{margin:0; font:16px/1.6 var(--sans); -webkit-font-smoothing:antialiased; background:var(--bg); color:var(--fg); transition:background-color .3s, color .3s}
 img{max-width:100%; display:block}
 a{color:inherit}
 :focus-visible{outline:3px solid var(--gold); outline-offset:3px; border-radius:6px}
@@ -60,40 +76,31 @@ a{color:inherit}
 .mono{font-family:var(--mono)}
 .serif{font-family:var(--serif)}
 
-/* A dark page (hub, /me board): put class="dark" on <body> */
-body.dark{background:var(--black); color:var(--white)}
-
-/* Small label above headings */
-.eyebrow{font:500 12px var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 8px}
-body.dark .eyebrow{color:var(--gold)}
+/* Small label above headings: gold you can read in either theme */
+.eyebrow{font:500 12px var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--accent-fg); margin:0 0 8px}
 .h-serif{font-family:var(--serif); font-weight:500; letter-spacing:-.02em; line-height:1.08; margin:0}
 
 /* Tags: fully round pills */
-.tag{display:inline-flex; align-items:center; gap:6px; font:500 12.5px var(--mono); padding:4px 11px; border-radius:var(--r-pill); background:var(--paper-2); border:1px solid var(--line); color:var(--muted); white-space:nowrap}
-.tag.olive{background:var(--olive-wash); color:var(--olive-deep); border-color:transparent}
+.tag{display:inline-flex; align-items:center; gap:6px; font:500 12.5px var(--mono); padding:4px 11px; border-radius:var(--r-pill); background:var(--surface-2); border:1px solid var(--hair); color:var(--fg-2); white-space:nowrap}
+.tag.olive{background:var(--wash-olive); color:var(--olive-fg); border-color:transparent}
 .tag.gold{background:var(--gold); color:var(--black); border-color:transparent}
-.tag.rose{background:var(--rose-wash); color:var(--rose-deep); border-color:transparent}
-body.dark .tag{background:var(--surface-dark); border-color:var(--line-dark); color:var(--muted-dark)}
+.tag.rose{background:var(--wash-rose); color:var(--rose-fg); border-color:transparent}
 
 /* Buttons */
-.btn{display:inline-flex; align-items:center; gap:8px; font:600 15px var(--sans); padding:11px 20px; border-radius:var(--r-md); text-decoration:none; border:1.5px solid var(--ink); cursor:pointer; background:transparent; color:var(--ink); transition:transform .15s, box-shadow .15s, background .15s}
+.btn{display:inline-flex; align-items:center; gap:8px; font:600 15px var(--sans); padding:11px 20px; border-radius:var(--r-md); text-decoration:none; border:1.5px solid var(--fg); cursor:pointer; background:transparent; color:var(--fg); transition:transform .15s, box-shadow .15s, background .15s}
 .btn:hover{transform:translateY(-1px); box-shadow:var(--shadow)}
-.btn.solid{background:var(--ink); color:var(--white)}
+.btn.solid{background:var(--fg); color:var(--bg)}
 .btn.gold{background:var(--gold); border-color:var(--gold); color:var(--black)}
-body.dark .btn{border-color:var(--white); color:var(--white)}
-body.dark .btn.gold{border-color:var(--gold); color:var(--black)}
 
 /* Cards */
-.card{background:var(--white); border:1px solid var(--line); border-radius:var(--r-lg); padding:20px 22px; box-shadow:var(--shadow)}
-body.dark .card{background:var(--surface-dark); border-color:var(--line-dark); box-shadow:none}
+.card{background:var(--surface); border:1px solid var(--hair); border-radius:var(--r-lg); padding:20px 22px; box-shadow:var(--shadow)}
 
 /* Footer used on every site */
-.site-foot{border-top:1px solid var(--line); margin-top:80px; padding:28px 0 40px; font-size:14px; color:var(--muted)}
-body.dark .site-foot{border-color:var(--line-dark); color:var(--muted-dark)}
+.site-foot{border-top:1px solid var(--hair); margin-top:80px; padding:28px 0 90px; font-size:14px; color:var(--fg-2)}
 .site-foot .wrap{display:flex; gap:18px; flex-wrap:wrap; align-items:center}
 .site-foot a{text-decoration:none}
-.site-foot a:hover{color:var(--gold-deep)}
-body.dark .site-foot a:hover{color:var(--gold)}
+.site-foot a:hover{color:var(--accent-fg)}
 .site-foot .right{margin-left:auto}
 
 @media (max-width:640px){ .wrap{padding:0 18px} }
+@media (prefers-reduced-motion:reduce){ *{animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important} }
