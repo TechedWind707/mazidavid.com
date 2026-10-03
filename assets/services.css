@@ -1,0 +1,152 @@
+/* =====================================================================
+   Mazi Services — styles
+   Tokens come straight from mazi-services/brand-board.html:
+     Yard Green (primary), Forest Floor (dark panels), Hi-Vis Amber
+     (the "repair" marker), Brick Fault (broken badges ONLY),
+     Ink / Stone text, Paper / Chalk surfaces. Never pure white.
+   Type: Archivo (display) + Public Sans (body).
+   ===================================================================== */
+:root{
+  /* RE-THEMED to David's palette: black · gold #D1A90A · white · ripe olive · rose (rare).
+     Variable NAMES kept from the brand board so the rest of the file didn't change:
+       --green  = ripe olive (primary)      --amber = gold (the "repair" marker)
+       --brick  = rose-deep (broken only)   --forest = black (dark panels)          */
+  --ink:#0D0D0B; --forest:#0D0D0B; --green:#556B2F; --amber:#D1A90A; --brick:#B0306A;
+  --stone:#5E5E57; --paper:#FFFFFF; --chalk:#F3F1EA; --line:#E2DFD4;
+  --display:"Archivo", system-ui, sans-serif;
+  --body:"Public Sans", system-ui, sans-serif;
+  --r-s:10px; --r-m:14px; --r-l:20px;   /* rounder, to match the other sites */
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:80px}
+body{margin:0; background:var(--paper); color:var(--ink); font:17px/1.55 var(--body)}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--amber); outline-offset:2px}   /* amber = focus, per board */
+.wrap{max-width:1180px; margin:0 auto; padding:0 28px}
+h2{font:700 clamp(26px,3.2vw,36px)/1.1 var(--display); letter-spacing:-.02em; margin:0 0 10px}
+.lead{color:var(--stone); font-size:18px; max-width:60ch; margin:0 0 28px}
+.section{padding:72px 28px}
+
+/* ---------- nav ---------- */
+.nav{position:sticky; top:0; z-index:20; background:rgba(255,255,255,.94); backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
+.nav-in{display:flex; align-items:center; gap:24px; height:68px}
+.brand{display:flex; align-items:center; gap:12px; text-decoration:none}
+.mark{width:30px; height:30px}
+.mark .lit{animation:blink 3s ease-in-out infinite}        /* the one lit node "pulses" */
+@keyframes blink{50%{opacity:.45}}
+.wm{font:700 20px var(--display); letter-spacing:-.02em}
+.wm span{font-weight:500; color:var(--stone)}
+.links{margin-left:auto; display:flex; gap:24px; align-items:center}
+.links a:not(.btn){font:500 15px var(--display); text-decoration:none; padding-bottom:3px; border-bottom:2px solid transparent}
+.links a:not(.btn):hover{border-bottom-color:var(--green); color:var(--green)}
+
+/* ---------- buttons ---------- */
+.btn{font:600 16px var(--display); border-radius:var(--r-s); padding:14px 22px; border:2px solid transparent; display:inline-flex; align-items:center; gap:10px; text-decoration:none; cursor:pointer; transition:transform .12s}
+.btn:active{transform:translateY(1px)}
+.btn.sm{padding:10px 16px; font-size:15px}
+.btn-primary{background:var(--green); color:var(--paper); box-shadow:0 2px 0 #3E4F21}
+.btn-primary .arrow{color:var(--amber)}
+.btn-secondary{background:transparent; color:var(--ink); border-color:var(--ink)}
+.btn-amber{background:var(--amber); color:var(--ink); box-shadow:0 2px 0 #8a6f00}
+
+/* ---------- hero ---------- */
+.hero{padding-top:64px; padding-bottom:40px; display:grid; grid-template-columns:1.05fr .95fr; gap:56px; align-items:start}
+.eyebrow{display:inline-flex; align-items:center; gap:8px; background:#EEF1E6; border-radius:100px; padding:6px 14px; margin-bottom:20px; font:600 12.5px var(--display); letter-spacing:.13em; text-transform:uppercase; color:var(--green)}
+.eyebrow .dot{width:7px; height:7px; border-radius:50%; background:var(--amber)}
+h1{font:700 clamp(36px,4.4vw,52px)/1.05 var(--display); letter-spacing:-.035em; margin:0 0 18px; max-width:19ch}
+h1 u{text-decoration:none; border-bottom:6px solid var(--amber)}
+.sub{font-size:19px; color:#3B4034; max-width:46ch; margin:0 0 26px}
+.btn-row{display:flex; gap:14px; flex-wrap:wrap}
+.trustline{list-style:none; padding:18px 0 0; margin:26px 0 0; border-top:1px dotted #c8bfa8; display:grid; gap:8px; font-size:15px; color:var(--stone)}
+.trustline.light{color:#cfd8cc; border-color:rgba(255,255,255,.25)}
+
+/* ---------- self-check card ---------- */
+.checklist{border:1px solid var(--line); border-radius:var(--r-l); overflow:hidden; background:var(--paper); box-shadow:0 18px 40px -24px rgba(8,48,26,.45)}
+.ch{display:flex; justify-content:space-between; font:600 11.5px var(--display); letter-spacing:.14em; text-transform:uppercase; background:var(--chalk); color:var(--stone); padding:12px 16px; border-bottom:1px solid var(--line)}
+.ch span{letter-spacing:.04em; text-transform:none; font-weight:500}
+.ci{display:flex; align-items:center; gap:12px; width:100%; padding:14px 16px; border:0; border-bottom:1px solid #e4dcc9; background:transparent; font:500 16px var(--body); color:var(--ink); cursor:pointer; text-align:left}
+.ci:hover{background:var(--chalk)}
+.ci .st{margin-left:auto}
+.summary{padding:14px 16px; background:var(--forest); color:var(--paper); font-size:15px; display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap}
+.summary a{color:var(--amber); font-weight:600}
+
+/* status badges (brand board: brick = broken only, amber = weak, green = fine) */
+.badge{font:600 12px var(--display); letter-spacing:.08em; text-transform:uppercase; border-radius:100px; padding:5px 12px; display:inline-flex; gap:7px; align-items:center; white-space:nowrap}
+.badge i{width:7px; height:7px; border-radius:50%; background:currentColor}
+.b-broken{background:var(--brick); color:var(--paper)}
+.b-weak{background:var(--amber); color:var(--ink)}
+.b-fixed{background:var(--green); color:var(--paper)}
+.b-unknown{background:var(--chalk); color:var(--stone)}
+
+/* ---------- five systems ---------- */
+.band{background:var(--chalk); padding:72px 0}
+.systems{display:grid; grid-template-columns:repeat(5,1fr); gap:14px}
+.sys{background:var(--paper); border:1px solid var(--line); border-radius:var(--r-l); padding:18px}
+.sys .n{font:700 13px var(--display); color:var(--green); letter-spacing:.1em}
+.sys h3{font:700 18px var(--display); margin:6px 0 8px; letter-spacing:-.01em}
+.sys ul{margin:0; padding-left:18px; font-size:14.5px; color:var(--stone)}
+.sys ul li{margin:4px 0}
+
+/* ---------- steps ---------- */
+.steps{list-style:none; padding:0; margin:20px 0 0; display:grid; grid-template-columns:repeat(3,1fr); gap:18px; counter-reset:s}
+.steps li{border-top:4px solid var(--green); padding-top:16px}
+.steps li:nth-child(2){border-color:var(--amber)}
+.steps b{display:block; font:700 20px var(--display); margin-bottom:6px}
+.steps span{color:var(--stone)}
+
+/* ---------- findings ---------- */
+.fgrid{display:grid; grid-template-columns:1fr 1fr; gap:20px}
+.findcard{border:1px solid var(--line); border-left:5px solid var(--brick); border-radius:var(--r-m); background:var(--paper); padding:20px}
+.findcard:has(.b-weak){border-left-color:var(--amber)}
+.findcard.ok{border-left-color:var(--green)}
+.findcard .top{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px}
+.where{font:600 11px var(--display); letter-spacing:.14em; text-transform:uppercase; color:var(--stone)}
+.findcard h3{font:700 19px/1.25 var(--body); letter-spacing:-.015em; margin:0 0 8px}
+.findcard p{margin:0; font-size:15px; color:var(--stone)}
+.foot{display:flex; gap:18px; flex-wrap:wrap; margin-top:14px; padding-top:12px; border-top:1px dotted #c8bfa8; font-size:13.5px}
+.foot b{font-family:var(--display); font-weight:600}
+
+/* ---------- prices ---------- */
+.prices{display:grid; grid-template-columns:repeat(4,1fr); gap:16px}
+.price{background:var(--paper); border:1px solid var(--line); border-radius:var(--r-l); padding:22px}
+.price.featured{background:var(--forest); color:var(--paper); border-color:var(--forest)}
+.price.featured p,.price.featured .tier{color:#cfd8cc}
+.tier{font:600 12px var(--display); letter-spacing:.12em; text-transform:uppercase; color:var(--stone)}
+.amt{display:block; font:700 28px var(--display); margin:8px 0; letter-spacing:-.02em}
+.price p{margin:0; color:var(--stone); font-size:15px}
+[data-todo]{outline:2px dashed var(--amber); outline-offset:3px; font-size:16px}
+
+/* ---------- faq ---------- */
+.faq{display:grid; gap:10px; max-width:820px}
+.faq details{border:1px solid var(--line); border-radius:var(--r-m); padding:14px 18px; background:var(--paper)}
+.faq summary{cursor:pointer; font:600 17px var(--display)}
+.faq p{color:var(--stone); margin:10px 0 0}
+
+/* ---------- book ---------- */
+.book{background:var(--forest); color:var(--paper); padding:76px 0}
+.book-in{display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:start}
+.book p{color:#cfd8cc}
+.form{display:grid; gap:14px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.14); border-radius:var(--r-l); padding:24px}
+.form label{display:grid; gap:6px; font:600 14px var(--display)}
+.form small{font-weight:400; color:#cfd8cc}
+.form input,.form textarea{font:16px var(--body); padding:12px 14px; border-radius:var(--r-s); border:1.5px solid rgba(255,255,255,.25); background:var(--paper); color:var(--ink)}
+.form input:focus,.form textarea:focus{outline:3px solid var(--amber); border-color:var(--amber)}
+.form .bad{border-color:var(--brick); outline:2px solid var(--brick)}
+.formmsg{margin:0; font-size:14px; min-height:20px}
+
+.footer{border-top:1px solid var(--line); padding:26px 0; font-size:14px; color:var(--stone)}
+.footer .wrap{display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px}
+
+/* ---------- responsive ---------- */
+@media (max-width:1000px){
+  .systems{grid-template-columns:repeat(2,1fr)} .prices{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:820px){
+  .hero,.book-in,.fgrid{grid-template-columns:1fr}
+  .steps{grid-template-columns:1fr}
+  .links a:not(.btn){display:none}            /* phone: just the CTA in the nav */
+}
+@media (max-width:520px){
+  .systems,.prices{grid-template-columns:1fr}
+  .wrap{padding:0 18px} .section{padding:56px 18px}
+}

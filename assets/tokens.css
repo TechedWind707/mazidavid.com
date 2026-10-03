@@ -1,0 +1,99 @@
+/* =====================================================================
+   tokens.css — the mazidavid.com design system (shared by hub, work, me)
+   ---------------------------------------------------------------------
+   YOUR PALETTE: black · gold #D1A90A · white · ripe olive · rose (rare)
+
+   Contrast rules (checked, WCAG AA needs 4.5:1 for body text):
+     gold #D1A90A on black ......... 8.7  ✓  use freely on dark surfaces
+     gold #D1A90A on white ......... 2.2  ✗  NEVER as text on white;
+                                          use --gold-deep #7A6000 (6.0) instead,
+                                          or gold as a FILL behind black text
+     olive #556B2F on white ........ 5.9  ✓  links, tags, status on light pages
+     rose  #E7A3B5 on black ........ 9.5  ✓  rare highlights on dark
+     rose-deep #B0306A on white .... 6.0  ✓  if rose ever needs to be text on white
+   Rose is the "seasoning": one or two touches per page, max.
+   ===================================================================== */
+:root{
+  /* core five */
+  --black:#0D0D0B;
+  --gold:#D1A90A;
+  --white:#FFFFFF;
+  --olive:#556B2F;
+  --rose:#E7A3B5;
+
+  /* helpers derived from the five (tints/shades, not new colours) */
+  --ink:var(--black);            /* main text on light pages          */
+  --paper:var(--white);          /* main background on light pages    */
+  --paper-2:#F6F5F0;             /* inset panels (white, warmed)      */
+  --line:#E6E4DC;                /* hairlines on white                */
+  --line-dark:#2A2A26;           /* hairlines on black                */
+  --muted:#5E5E57;               /* secondary text on white (6.5:1)   */
+  --muted-dark:#A8A69C;          /* secondary text on black           */
+  --gold-deep:#7A6000;           /* gold that is legible ON WHITE      */
+  --gold-wash:#FBF4D8;           /* soft gold fill                    */
+  --olive-deep:#3E4F21;
+  --olive-wash:#EEF1E6;
+  --rose-deep:#B0306A;
+  --rose-wash:#FBEEF2;
+  --surface-dark:#161613;        /* cards on black                    */
+
+  /* type */
+  --serif:"Fraunces", Georgia, "Times New Roman", serif;
+  --sans:"Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --hand:"Caveat", cursive;
+
+  /* shape: generously round, as you asked */
+  --r-sm:10px; --r-md:14px; --r-lg:20px; --r-xl:28px; --r-pill:999px;
+  --shadow:0 1px 2px rgba(13,13,11,.06), 0 10px 26px -14px rgba(13,13,11,.35);
+  --shadow-lift:0 2px 3px rgba(13,13,11,.08), 0 26px 44px -20px rgba(13,13,11,.5);
+  --wrap:1120px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0; font:16px/1.6 var(--sans); -webkit-font-smoothing:antialiased; background:var(--paper); color:var(--ink)}
+img{max-width:100%; display:block}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--gold); outline-offset:3px; border-radius:6px}
+.wrap{max-width:var(--wrap); margin:0 auto; padding:0 24px}
+.mono{font-family:var(--mono)}
+.serif{font-family:var(--serif)}
+
+/* A dark page (hub, /me board): put class="dark" on <body> */
+body.dark{background:var(--black); color:var(--white)}
+
+/* Small label above headings */
+.eyebrow{font:500 12px var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 8px}
+body.dark .eyebrow{color:var(--gold)}
+.h-serif{font-family:var(--serif); font-weight:500; letter-spacing:-.02em; line-height:1.08; margin:0}
+
+/* Tags: fully round pills */
+.tag{display:inline-flex; align-items:center; gap:6px; font:500 12.5px var(--mono); padding:4px 11px; border-radius:var(--r-pill); background:var(--paper-2); border:1px solid var(--line); color:var(--muted); white-space:nowrap}
+.tag.olive{background:var(--olive-wash); color:var(--olive-deep); border-color:transparent}
+.tag.gold{background:var(--gold); color:var(--black); border-color:transparent}
+.tag.rose{background:var(--rose-wash); color:var(--rose-deep); border-color:transparent}
+body.dark .tag{background:var(--surface-dark); border-color:var(--line-dark); color:var(--muted-dark)}
+
+/* Buttons */
+.btn{display:inline-flex; align-items:center; gap:8px; font:600 15px var(--sans); padding:11px 20px; border-radius:var(--r-md); text-decoration:none; border:1.5px solid var(--ink); cursor:pointer; background:transparent; color:var(--ink); transition:transform .15s, box-shadow .15s, background .15s}
+.btn:hover{transform:translateY(-1px); box-shadow:var(--shadow)}
+.btn.solid{background:var(--ink); color:var(--white)}
+.btn.gold{background:var(--gold); border-color:var(--gold); color:var(--black)}
+body.dark .btn{border-color:var(--white); color:var(--white)}
+body.dark .btn.gold{border-color:var(--gold); color:var(--black)}
+
+/* Cards */
+.card{background:var(--white); border:1px solid var(--line); border-radius:var(--r-lg); padding:20px 22px; box-shadow:var(--shadow)}
+body.dark .card{background:var(--surface-dark); border-color:var(--line-dark); box-shadow:none}
+
+/* Footer used on every site */
+.site-foot{border-top:1px solid var(--line); margin-top:80px; padding:28px 0 40px; font-size:14px; color:var(--muted)}
+body.dark .site-foot{border-color:var(--line-dark); color:var(--muted-dark)}
+.site-foot .wrap{display:flex; gap:18px; flex-wrap:wrap; align-items:center}
+.site-foot a{text-decoration:none}
+.site-foot a:hover{color:var(--gold-deep)}
+body.dark .site-foot a:hover{color:var(--gold)}
+.site-foot .right{margin-left:auto}
+
+@media (max-width:640px){ .wrap{padding:0 18px} }

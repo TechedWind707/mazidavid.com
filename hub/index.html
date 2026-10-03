@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mazi David</title>
+<meta name="description" content="Mazi David (David Nsofor): work, writing, photographs and the person, from Halifax, Nova Scotia.">
+<meta property="og:title" content="Mazi David">
+<meta property="og:description" content="Work, writing, photographs and the person. Halifax, Nova Scotia.">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/tokens.css">
+<style>
+/* =====================================================================
+   HUB (mazidavid.com) — the front door to everything.
+   Dark page: black + white, gold as the light. One rose touch (the /me door).
+   Each door shows something LIVE from its site so the hub never goes stale:
+     Work    -> project count from content.js
+     Blog    -> latest posts fetched from Hashnode (falls back to content.js)
+     Gallery -> photo count + newest date from gallery.mazidavid.com
+   ===================================================================== */
+.hello{padding:84px 0 40px; position:relative}
+.hello h1{font-size:clamp(44px,7vw,92px); max-width:13ch}
+.hello h1 em{font-style:italic; color:var(--gold)}
+.hello p{font-size:19px; color:var(--muted-dark); max-width:56ch; margin:22px 0 0}
+.hello .fact{font:500 13px var(--mono); color:var(--muted-dark); margin-top:18px}
+/* a slow gold glow behind the headline */
+.hello::before{content:""; position:absolute; right:-10%; top:10%; width:520px; height:520px; border-radius:50%;
+  background:radial-gradient(circle, rgba(209,169,10,.22), transparent 65%); filter:blur(10px); pointer-events:none;
+  animation:drift 14s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate(-60px,40px) scale(1.1)}}
+
+/* doors */
+.doors{display:grid; grid-template-columns:repeat(6,1fr); gap:16px; margin-top:24px}
+.door{grid-column:span 2; position:relative; display:flex; flex-direction:column; gap:10px; min-height:250px; padding:26px;
+  border-radius:var(--r-xl); text-decoration:none; color:var(--white); background:var(--surface-dark); border:1px solid var(--line-dark);
+  transition:transform .2s, border-color .2s, background .2s; overflow:hidden}
+.door:hover{transform:translateY(-4px); border-color:var(--gold); background:#1b1a15}
+.door.big{grid-column:span 3}
+.door .k{font:500 12px var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--gold)}
+.door h2{font:500 36px/1 var(--serif); letter-spacing:-.02em; margin:auto 0 0}
+.door p{margin:0; color:var(--muted-dark); font-size:15px}
+.door .live{font:500 13px var(--mono); color:var(--white); display:flex; gap:8px; align-items:center}
+.door .live::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--gold); animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.door ul{list-style:none; margin:0; padding:0; display:grid; gap:6px}
+.door li{font-size:14px; color:#e9e7df; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.door li span{color:var(--muted-dark); font:12px var(--mono); margin-right:8px}
+/* the gold door = Work (the one recruiters should hit first) */
+.door.work{background:var(--gold); color:var(--black); border-color:var(--gold)}
+.door.work .k,.door.work p,.door.work .live{color:var(--black)}
+.door.work .live::before{background:var(--black)}
+.door.work:hover{background:#dcb320}
+/* the rose door = Me (the only rose on the page) */
+.door.me{border-color:rgba(231,163,181,.35)}
+.door.me .k{color:var(--rose)}
+.door.me:hover{border-color:var(--rose)}
+.door.services .k{color:#9db36b}  /* ripe olive, lifted for dark bg */
+
+.arrow{position:absolute; right:22px; top:22px; font-size:22px; transition:transform .2s}
+.door:hover .arrow{transform:translate(4px,-4px)}
+
+@media (max-width:900px){ .doors{grid-template-columns:1fr 1fr} .door,.door.big{grid-column:span 1} }
+@media (max-width:600px){ .doors{grid-template-columns:1fr} }
+/* "Everywhere else" row: round pills, gold on hover */
+.elsewhere{margin-top:44px}
+.elsewhere .pills{display:flex; flex-wrap:wrap; gap:10px}
+.elsewhere a{display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:var(--r-pill); border:1px solid var(--line-dark); background:var(--surface-dark); color:var(--white); text-decoration:none; font:500 14px var(--sans); transition:border-color .2s, transform .2s}
+.elsewhere a:hover{border-color:var(--gold); transform:translateY(-2px)}
+.elsewhere a small{font:500 12px var(--mono); color:var(--muted-dark)}
+.elsewhere a.rz{border-color:var(--rose)}
+</style>
+</head>
+<body class="dark">
+<script src="/assets/eco-nav.js" data-current="home"></script>
+
+<main class="wrap">
+  <section class="hello">
+    <p class="eyebrow" id="where"></p>
+    <h1 class="h-serif">Building tools that <em>work</em> for people.</h1>
+    <p id="oneliner"></p>
+    <p class="fact" id="fact"></p>
+  </section>
+
+  <nav class="doors" aria-label="Sections">
+    <a class="door work big" href="https://work.mazidavid.com">
+      <span class="arrow">&nearr;</span>
+      <span class="k">Work · for recruiters</span>
+      <h2>Work</h2>
+      <p>Projects, skills and experience. The resume, as a website.</p>
+      <span class="live" id="workLive"></span>
+    </a>
+    <a class="door big" href="https://blog.mazidavid.com">
+      <span class="arrow">&nearr;</span>
+      <span class="k">Blog</span>
+      <ul id="posts"></ul>
+      <h2>Blog</h2>
+      <p>Guides, tools and things I figured out.</p>
+    </a>
+    <a class="door" href="https://gallery.mazidavid.com">
+      <span class="arrow">&nearr;</span>
+      <span class="k">Gallery</span>
+      <h2>Gallery</h2>
+      <p>The photos I think are eyeworthy.</p>
+      <span class="live" id="galleryLive">photographs</span>
+    </a>
+    <a class="door me" href="https://me.mazidavid.com">
+      <span class="arrow">&nearr;</span>
+      <span class="k">Me</span>
+      <h2>The person</h2>
+      <p>Aims, half-formed ideas, the crazier side.</p>
+    </a>
+    <a class="door services" href="https://services.mazidavid.com">
+      <span class="arrow">&nearr;</span>
+      <span class="k">Services</span>
+      <h2>Mazi Services</h2>
+      <p>Free walkthrough of your business's online setup.</p>
+    </a>
+  </nav>
+
+  <!-- Everywhere else: every other place I exist online, in one row. -->
+  <section class="elsewhere" aria-label="Elsewhere">
+    <p class="eyebrow">Everywhere else</p>
+    <div class="pills" id="elsewhere"></div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap" id="foot"></div>
+</footer>
+
+<script src="/assets/content.js"></script>
+<script>
+/* ---------- text from content.js ---------- */
+const P = SITE.person;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+document.getElementById("where").textContent = `${P.location} · ${P.role}`;
+document.getElementById("oneliner").textContent = `${P.oneLiner} ${P.openTo}`;
+document.getElementById("fact").textContent = `Fun fact: ${P.funFact}`;
+/* Work door count: live from the database, content.js as the fallback */
+const countWork = list => document.getElementById("workLive").textContent =
+  `${list.length} projects · ${list.filter(p => p.status === "ongoing").length} ongoing`;
+countWork(SITE.projects);
+fetch("/api/projects").then(r => r.ok ? r.json() : null).then(j => j?.projects?.length && countWork(j.projects)).catch(() => {});
+
+/* ---------- Everywhere else ---------- */
+const ELSEWHERE = [
+  ["Resume (PDF)", P.resumePdf, "rz"],
+  ["Email", `mailto:${P.email}`, "", P.email],
+  ["GitHub", P.links.github, "", "TechedWind707"],
+  ["LinkedIn", P.links.linkedin, "", "david-nsofor"],
+  ["Blog", P.links.blog, "", "Hashnode"],
+  ["X", P.links.x, "", "@MaziDavid_c3"],
+  ["Linktree", P.links.linktree, ""],
+];
+document.getElementById("elsewhere").innerHTML = ELSEWHERE.filter(x => x[1]).map(([label, href, cls, sub]) =>
+  `<a class="${cls}" href="${esc(href)}">${esc(label)}${sub ? ` <small>${esc(sub)}</small>` : ""}</a>`).join("");
+document.getElementById("foot").innerHTML = `
+  <span>&copy; ${new Date().getFullYear()} ${esc(P.fullName)}</span>
+  <a href="mailto:${esc(P.email)}">Email</a>
+  <a href="${P.links.github}">GitHub</a>
+  <a href="${P.links.linkedin}">LinkedIn</a>
+  <a href="${P.links.x}">X</a>`;
+
+/* ---------- Blog door: latest posts, live from Hashnode ----------
+   Hashnode has a public GraphQL API. If it's unreachable (offline,
+   blocked, API change) we quietly show the list in content.js. */
+const showPosts = list => {
+  document.getElementById("posts").innerHTML = list.slice(0, 3).map(p => {
+    const d = new Date(p.date || p.publishedAt);
+    const short = isNaN(d) ? "" : d.toLocaleDateString("en", { month: "short", year: "numeric" });
+    return `<li><span>${short}</span>${esc(p.title)}</li>`;
+  }).join("");
+};
+showPosts([...SITE.posts].sort((a, b) => b.date.localeCompare(a.date)));       // instant fallback
+fetch("https://gql.hashnode.com", {
+  method: "POST", headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ query: `{ publication(host:"blog.mazidavid.com"){ posts(first:3){ edges{ node{ title publishedAt url } } } } }` })
+}).then(r => r.json())
+  .then(j => { const e = j?.data?.publication?.posts?.edges; if (e?.length) showPosts(e.map(x => x.node)); })
+  .catch(() => {});
+
+/* ---------- Gallery door: live count from the gallery's own index ---------- */
+fetch("https://gallery.mazidavid.com/assets/gallery-data.json")
+  .then(r => r.json())
+  .then(d => {
+    const newest = d.photos.map(p => p.date).sort().pop();
+    const when = newest ? new Date(newest + "T00:00").toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" }) : "";
+    document.getElementById("galleryLive").textContent = `${d.photoCount} photos${when ? " · newest " + when : ""}`;
+  })
+  .catch(() => {});
+</script>
+</body>
+</html>

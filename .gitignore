@@ -1,0 +1,6 @@
+node_modules/
+.vercel/
+.env*
+# Your login secrets file is written here by scripts/make-admin-secrets.mjs. NEVER commit it.
+ADMIN-SECRETS*.txt
+*.qr.png

@@ -1,0 +1,38 @@
+// Local end-to-end API check. Reads secrets from ADMIN-SECRETS.txt, never prints them.
+import { readFileSync } from "node:fs";
+import { createHmac } from "node:crypto";
+const txt = readFileSync("ADMIN-SECRETS.txt", "utf8");
+const get = (k) => txt.match(new RegExp(`^${k}=(.*)$`, "m"))?.[1] ?? txt.match(new RegExp(`${k}:\\s+(\\S+)`))?.[1];
+const PW = get("Password"), TOTP = get("ADMIN_TOTP_SECRET");
+const B = "http://localhost:3000", O = { Origin: B, "Content-Type": "application/json" };
+const b32 = (s) => { const a = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"; let bits = ""; for (const c of s) bits += a.indexOf(c).toString(2).padStart(5, "0"); const out = []; for (let i = 0; i + 8 <= bits.length; i += 8) out.push(parseInt(bits.slice(i, i + 8), 2)); return Buffer.from(out); };
+const code = () => { const m = Buffer.alloc(8); m.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30000))); const h = createHmac("sha1", b32(TOTP)).update(m).digest(); const o = h[19] & 15; return String((((h[o] & 127) << 24) | (h[o+1] << 16) | (h[o+2] << 8) | h[o+3]) % 1e6).padStart(6, "0"); };
+const j = async (p, opt = {}) => { const r = await fetch(B + p, opt); return [r.status, await r.json().catch(() => null), r.headers.get("set-cookie")]; };
+const ok = (name, cond) => console.log((cond ? "PASS " : "FAIL ") + name);
+
+let [s, d] = await j("/api/projects"); ok(`public projects (${d?.projects?.length})`, s === 200 && d.projects.length > 10);
+[s, d] = await j("/api/board"); ok(`public board (${d?.notes?.length} notes)`, s === 200 && d.notes.length > 0);
+[s] = await j("/api/admin?r=projects"); ok("admin without login → 401", s === 401);
+[s] = await j("/api/board", { method: "POST", headers: { ...O, Origin: "https://evil.example" }, body: JSON.stringify({ body: "hi there" }) }); ok("visitor note from other origin → 403", s === 403);
+[s] = await j("/api/board", { method: "POST", headers: O, body: JSON.stringify({ body: "spam http://x.com" }) }); ok("visitor note with link → 400", s === 400);
+[s, d] = await j("/api/board", { method: "POST", headers: O, body: JSON.stringify({ name: "Test", body: "E2E test note, delete me" }) }); ok("visitor note accepted as pending", s === 201 && d.pending);
+[s, d] = await j("/api/board"); ok("pending note NOT public", !d.visitors.some(v => v.body.includes("E2E test")));
+[s] = await j("/api/auth", { method: "POST", headers: O, body: JSON.stringify({ action: "login", password: "wrong-password-123", code: code() }) }); ok("wrong password → 401", s === 401);
+[s] = await j("/api/auth", { method: "POST", headers: { ...O, Origin: "https://evil.example" }, body: JSON.stringify({ action: "login", password: PW, code: code() }) }); ok("login from other origin → 403", s === 403);
+let cookie; [s, d, cookie] = await j("/api/auth", { method: "POST", headers: O, body: JSON.stringify({ action: "login", password: PW, code: code() }) });
+ok("correct password + code → 200 + cookie", s === 200 && /__Host-md_admin=.*HttpOnly.*Secure.*SameSite=Strict/i.test(cookie || ""));
+[s] = await j("/api/auth", { method: "POST", headers: O, body: JSON.stringify({ action: "login", password: PW, code: code() }) }); ok("same code replayed → 401", s === 401);
+const C = { Cookie: cookie.split(";")[0], "user-agent": "node" };
+const CA = { ...C, ...O };
+[s, d] = await j("/api/admin?r=visitors&status=pending", { headers: C }); const mine = d?.visitors?.find(v => v.body.includes("E2E test")); ok("admin sees pending note", s === 200 && !!mine);
+[s] = await j(`/api/admin?r=visitors&id=${mine.id}`, { method: "PUT", headers: { ...C, "Content-Type": "application/json" }, body: JSON.stringify({ action: "approve" }) }); ok("admin change without Origin → 403", s === 403);
+[s] = await j(`/api/admin?r=visitors&id=${mine.id}`, { method: "PUT", headers: CA, body: JSON.stringify({ action: "approve" }) }); ok("approve", s === 200);
+[s, d] = await j("/api/board"); ok("approved note now public", d.visitors.some(v => v.body.includes("E2E test")));
+[s] = await j(`/api/admin?r=visitors&id=${mine.id}`, { method: "DELETE", headers: CA }); ok("delete note", s === 200);
+[s] = await j("/api/admin?r=projects", { headers: { Cookie: C.Cookie.replace(/.$/, "x"), "user-agent": "node" } }); ok("tampered cookie → 401", s === 401);
+[s] = await j("/api/admin?r=projects", { headers: { Cookie: C.Cookie, "user-agent": "other-browser" } }); ok("cookie in different browser → 401", s === 401);
+[s, d] = await j("/api/admin?r=notes", { method: "POST", headers: CA, body: JSON.stringify({ kind: "think", title: "E2E", body_md: "**hi**", tags: [{ type: "link", url: "javascript:alert(1)" }, { type: "post", url: "https://blog.mazidavid.com/x", title: "x" }] }) });
+const nid = d?.id; [s, d] = await j("/api/admin?r=notes", { headers: C }); const n = d.notes.find(x => x.id === nid);
+ok("note create strips javascript: tag", n && n.tags.length === 1 && n.tags[0].url.startsWith("https://"));
+[s] = await j(`/api/admin?r=notes&id=${nid}`, { method: "DELETE", headers: CA }); ok("note delete", s === 200);
+[s, d] = await j("/api/admin?r=audit", { headers: C }); ok(`audit log (${d?.audit?.length} rows)`, s === 200 && d.audit.length > 3);

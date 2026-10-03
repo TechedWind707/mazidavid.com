@@ -1,0 +1,15 @@
+{
+  "name": "mazidavid-com",
+  "private": true,
+  "type": "module",
+  "description": "mazidavid.com hub + work. + me. + services. on one Vercel project, with a small Neon-backed API",
+  "scripts": {
+    "secrets": "node scripts/make-admin-secrets.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Admin · mazidavid.com</title>
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/tokens.css">
+<link rel="stylesheet" href="/admin/admin.css">
+<!--
+  ADMIN for work.mazidavid.com (projects) and me.mazidavid.com (board).
+  This page is just a shell: nothing here is secret. The API refuses
+  every request without a valid login cookie, so even if someone opens
+  this page, all they see is the login box.
+  Scripts are external files only (the Content-Security-Policy in
+  vercel.json blocks inline <script>), which stops injected code.
+-->
+</head>
+<body>
+
+<!-- ========== LOGIN ========== -->
+<main class="login" id="loginView" hidden>
+  <form class="card" id="loginForm" autocomplete="on">
+    <p class="eyebrow">mazidavid.com</p>
+    <h1 class="h-serif">Admin</h1>
+    <label>Password
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <label>6-digit code <small>from your authenticator app</small>
+      <input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="\d{6}" maxlength="6" required>
+    </label>
+    <button class="btn solid" type="submit">Log in</button>
+    <p class="msg" id="loginMsg" aria-live="polite"></p>
+  </form>
+</main>
+
+<!-- ========== APP ========== -->
+<div id="appView" hidden>
+  <header class="top">
+    <div class="wrap top-in">
+      <b class="brand">mazidavid<span>.com</span> admin</b>
+      <nav class="tabs" id="tabs">
+        <button data-tab="projects" class="on">Projects</button>
+        <button data-tab="notes">Board notes</button>
+        <button data-tab="visitors">Visitor notes <span class="pill" id="pendingCount"></span></button>
+        <button data-tab="audit">Activity</button>
+      </nav>
+      <button class="btn" id="logout">Log out</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- PROJECTS -->
+    <section data-panel="projects">
+      <div class="bar">
+        <h2 class="h-serif">Projects</h2>
+        <a class="link" href="https://work.mazidavid.com" target="_blank" rel="noopener">view site ↗</a>
+        <button class="btn solid" id="newProject">+ New project</button>
+      </div>
+      <p class="hint">Lower "order" shows first. Hidden projects stay in the database but never reach the public site.</p>
+      <div class="split">
+        <div class="list" id="projectList"></div>
+        <form class="card editor" id="projectForm" hidden>
+          <h3 id="pfTitle">Edit project</h3>
+          <div class="grid2">
+            <label>ID (url-safe, permanent)<input name="id" required pattern="[a-z0-9-]+"></label>
+            <label>Title<input name="title" required maxlength="120"></label>
+            <label>Kind
+              <select name="kind"><option>ai</option><option>extension</option><option>web</option><option>mobile</option><option>school</option><option>design</option></select>
+            </label>
+            <label>Status
+              <select name="status"><option>ongoing</option><option>shipped</option><option>ideation</option><option>halted</option></select>
+            </label>
+            <label>Year<input name="year" maxlength="12"></label>
+            <label>Order<input name="sort" type="number" min="0" max="9999"></label>
+          </div>
+          <div class="checks">
+            <label><input type="checkbox" name="featured"> Featured (big card)</label>
+            <label><input type="checkbox" name="school"> School project</label>
+            <label><input type="checkbox" name="hidden"> Hidden</label>
+          </div>
+          <label>Summary<textarea name="summary" rows="3" maxlength="800"></textarea></label>
+          <label>What I did <small>one per line</small><textarea name="did" rows="4"></textarea></label>
+          <label>Stack <small>one per line</small><textarea name="stack" rows="3"></textarea></label>
+          <div class="grid3">
+            <label>Live URL<input name="live" type="url" placeholder="https://"></label>
+            <label>Repo URL<input name="repo" type="url" placeholder="https://"></label>
+            <label>Write-up URL<input name="post" type="url" placeholder="https://"></label>
+          </div>
+          <div class="actions">
+            <button class="btn solid" type="submit">Save</button>
+            <button class="btn" type="button" data-cancel>Cancel</button>
+            <button class="btn danger" type="button" id="deleteProject">Delete</button>
+          </div>
+          <p class="msg" id="projectMsg" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- BOARD NOTES -->
+    <section data-panel="notes" hidden>
+      <div class="bar">
+        <h2 class="h-serif">Board notes</h2>
+        <a class="link" href="https://me.mazidavid.com" target="_blank" rel="noopener">view board ↗</a>
+        <button class="btn solid" id="newNote">+ New note</button>
+      </div>
+      <p class="hint">Write in markdown: **bold**, *italic*, lists, `code`, [links](https://…), &gt; quotes. Attach blog posts, photos or links underneath.</p>
+      <div class="split">
+        <div class="list" id="noteList"></div>
+        <form class="card editor" id="noteForm" hidden>
+          <h3 id="nfTitle">Edit note</h3>
+          <div class="grid3">
+            <label>Kind
+              <select name="kind"><option>think</option><option>aim</option><option>build</option><option>look</option><option>who</option></select>
+            </label>
+            <label>Date<input name="date" type="date"></label>
+            <div class="checks col">
+              <label><input type="checkbox" name="pinned"> Pinned</label>
+              <label><input type="checkbox" name="hidden"> Hidden</label>
+            </div>
+          </div>
+          <label>Title<input name="title" maxlength="140"></label>
+          <div class="mdsplit">
+            <label>Markdown<textarea name="body_md" rows="9" maxlength="8000"></textarea></label>
+            <div><span class="lbl">Preview</span><div class="preview md" id="mdPreview"></div></div>
+          </div>
+
+          <div class="tagbox">
+            <span class="lbl">Attached</span>
+            <div id="tagList" class="tags"></div>
+            <div class="tagbtns">
+              <button class="btn sm" type="button" id="addPost">+ Blog post</button>
+              <button class="btn sm" type="button" id="addPhoto">+ Photo</button>
+              <button class="btn sm" type="button" id="addLink">+ Link</button>
+            </div>
+            <div class="picker" id="picker" hidden></div>
+          </div>
+
+          <div class="actions">
+            <button class="btn solid" type="submit">Save</button>
+            <button class="btn" type="button" data-cancel>Cancel</button>
+            <button class="btn danger" type="button" id="deleteNote">Delete</button>
+          </div>
+          <p class="msg" id="noteMsg" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- VISITOR NOTES -->
+    <section data-panel="visitors" hidden>
+      <div class="bar">
+        <h2 class="h-serif">Visitor notes</h2>
+        <div class="seg" id="vfilter"><button data-s="pending" class="on">Waiting</button><button data-s="approved">On the wall</button></div>
+      </div>
+      <p class="hint">Nothing a visitor writes is public until you approve it. Delete removes it for good.</p>
+      <div id="visitorList" class="vlist"></div>
+    </section>
+
+    <!-- AUDIT -->
+    <section data-panel="audit" hidden>
+      <div class="bar"><h2 class="h-serif">Activity</h2></div>
+      <p class="hint">Every login attempt and change. Repeated "login-failed" or "rate-limited" lines mean someone is trying to get in; rotate SESSION_SECRET and your password if anything looks off.</p>
+      <table class="audit"><thead><tr><th>When</th><th>What</th><th>Detail</th></tr></thead><tbody id="auditBody"></tbody></table>
+    </section>
+  </main>
+</div>
+
+<script src="/assets/vendor/marked.umd.js"></script>
+<script src="/assets/vendor/purify.min.js"></script>
+<script src="/admin/admin.js"></script>
+</body>
+</html>

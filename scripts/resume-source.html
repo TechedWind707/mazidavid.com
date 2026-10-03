@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>David Nsofor · Resume</title>
+<style>
+/* One-page resume. Same palette as the sites: black text, gold rules,
+   olive accents (all print-safe). Fonts: system serif + sans so the PDF
+   renders the same everywhere. */
+@page{size:Letter; margin:0.45in 0.5in}
+*{box-sizing:border-box}
+body{margin:0; font:9.6pt/1.38 "Helvetica Neue", Arial, sans-serif; color:#0D0D0B}
+a{color:inherit; text-decoration:none}
+header{display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2.5pt solid #D1A90A; padding-bottom:6pt; margin-bottom:7pt}
+h1{font:600 23pt/1 Georgia, "Times New Roman", serif; margin:0; letter-spacing:-.3pt}
+h1 small{font:italic 400 11pt Georgia, serif; color:#5E5E57; margin-left:6pt}
+.role{margin-top:3pt; font-size:10pt; color:#3E4F21; font-weight:600}
+.contact{text-align:right; font-size:8.8pt; line-height:1.5; color:#333}
+.contact b{color:#0D0D0B}
+h2{font:700 8.6pt Arial, sans-serif; letter-spacing:1.4pt; text-transform:uppercase; color:#3E4F21; margin:9pt 0 4pt; display:flex; align-items:center; gap:6pt}
+h2::after{content:""; flex:1; border-top:.8pt solid #E6E4DC}
+p{margin:0 0 3pt}
+.item{margin-bottom:5pt; break-inside:avoid}
+.row{display:flex; justify-content:space-between; gap:10pt; align-items:baseline}
+.row b{font-size:10pt}
+.row .when{font-size:8.6pt; color:#5E5E57; white-space:nowrap}
+.sub{color:#5E5E57; font-size:8.8pt}
+ul{margin:1.5pt 0 0; padding-left:12pt}
+li{margin:0 0 1.2pt}
+.stack{font-size:8.4pt; color:#3E4F21}
+.skills{display:grid; grid-template-columns:auto 1fr; gap:1.5pt 10pt; font-size:9.1pt}
+.skills dt{font-weight:700}
+.skills dd{margin:0}
+.two{display:grid; grid-template-columns:1fr 1fr; gap:0 16pt}
+.status{font-size:7.6pt; font-weight:700; text-transform:uppercase; letter-spacing:.6pt; color:#7A6000; margin-left:5pt}
+</style></head>
+<body>
+
+<header>
+  <div>
+    <h1>David Nsofor<small>“Mazi David”</small></h1>
+    <div class="role">IT Programming student · AI tools, extensions &amp; web apps</div>
+  </div>
+  <div class="contact">
+    Halifax, Nova Scotia · <b><a href="mailto:davidnsofor@proton.me">davidnsofor@proton.me</a></b><br>
+    <a href="https://work.mazidavid.com">work.mazidavid.com</a> · <a href="https://mazidavid.com">mazidavid.com</a><br>
+    <a href="https://github.com/TechedWind707">github.com/TechedWind707</a> · <a href="https://www.linkedin.com/in/david-nsofor">linkedin.com/in/david-nsofor</a>
+  </div>
+</header>
+
+<p>Second-year IT Programming student at NSCC who ships. I build AI-powered tools end to end: LLM classification pipelines, Claude vision + tool-use apps, MCP servers, Raycast and Chrome extensions, and full-stack web apps on Next.js, ASP.NET Core and Postgres. Looking for a co-op or internship where I can ship to real users. Canadian Permanent Resident.</p>
+
+<h2>Technical skills</h2>
+<dl class="skills">
+  <dt>Languages</dt><dd>TypeScript, JavaScript, C#, Python, C++, C, Java, Kotlin, SQL, HTML/CSS</dd>
+  <dt>Frameworks</dt><dd>Next.js, React, React Native / Expo, ASP.NET Core MVC, Entity Framework Core, Jetpack Compose, Tailwind, Prisma</dd>
+  <dt>AI</dt><dd>Claude &amp; OpenAI APIs, tool use and structured output, vision, MCP servers, LLM classification pipelines, prompt evaluation</dd>
+  <dt>Data &amp; cloud</dt><dd>PostgreSQL (Supabase, Neon, row-level security), SQL Server, SQLite, Vercel, Docker, GitHub Actions</dd>
+  <dt>Tools</dt><dd>Git &amp; GitHub, Linux CLI &amp; shell, Bun, Figma, Raycast API, Chrome Extensions (MV3), Agile/Scrum</dd>
+</dl>
+
+<h2>Selected projects</h2>
+<div class="item">
+  <div class="row"><b>JAMB Smart Search<span class="status">ongoing</span></b><span class="when">2026</span></div>
+  <ul>
+    <li>Topic-filtered bank of 20,000+ Nigerian JAMB past questions: ask for “quadratic-equation questions from 2015–2020” instead of only subject and year.</li>
+    <li>Pipeline fetches from the ALOC API, classifies topic and difficulty with an LLM (free-first model with a Claude Haiku fallback, validated on samples before full runs) and upserts into Supabase.</li>
+    <li>Postgres with row-level security: public read, writes only through a service-role loader; GitHub Actions keep-alive cron.</li>
+  </ul>
+  <div class="stack">Next.js 16 · TypeScript · Tailwind · Supabase · LLM classification</div>
+</div>
+<div class="item">
+  <div class="row"><b>HFX TreeWatch<span class="status">hackathon</span></b><span class="when">2026</span></div>
+  <ul>
+    <li>Severity triage for Halifax Urban Forestry’s 311 tree requests, built in a 4.5-hour hackathon. Claude vision + tool use scores the hazard 1–5 from the resident’s photo, description and address history, with a one-line evidence-based reason and a low-confidence flag.</li>
+    <li>Resident reporting flow and a ranked forestry queue; dispatcher overrides keep the original score and an audit trail.</li>
+  </ul>
+  <div class="stack">Next.js 16 · TypeScript · Prisma · SQLite · Claude API</div>
+</div>
+<div class="item">
+  <div class="row"><b>RayBridge for Windows<span class="status">ongoing</span></b><span class="when">2026</span></div>
+  <ul>
+    <li>Ported an MCP server that exposes Raycast extensions as tools for AI clients (Claude Code, Cursor) from macOS to Windows: 31 extensions / 162 tools now load.</li>
+    <li>Diagnosed and fixed platform paths, wrote file-backed storage and clipboard shims, and added a bring-your-own-token fallback for OAuth extensions.</li>
+  </ul>
+  <div class="stack">TypeScript · Bun · Model Context Protocol</div>
+</div>
+<div class="two">
+  <div class="item">
+    <div class="row"><b>Logos AI<span class="status">ongoing</span></b><span class="when">2026</span></div>
+    <p>AI study companion that turns course material into flashcards and quizzes. Android home-screen widget you can answer quizzes in directly; keyword scoring highlights missed terms with zero extra AI calls.</p>
+    <div class="stack">React Native / Expo · TypeScript · Kotlin</div>
+  </div>
+  <div class="item">
+    <div class="row"><b>Rayzam &amp; Spotizam<span class="status">shipped</span></b><span class="when">2026</span></div>
+    <p>Song recognition inside Raycast and inside Spotify (Spicetify): ffmpeg mic capture, ACRCloud / AudD providers, local history with export, Jest tests, one-line installers.</p>
+    <div class="stack">TypeScript · Raycast API · Spicetify · ffmpeg</div>
+  </div>
+  <div class="item">
+    <div class="row"><b>mazidavid.com<span class="status">shipped</span></b><span class="when">2026</span></div>
+    <p>Five interlinked sites on one Vercel project with a Neon Postgres API, a password + TOTP admin with signed HttpOnly sessions and rate limiting, and a moderated visitor guestbook.</p>
+    <div class="stack">JavaScript · Vercel Functions · Neon Postgres</div>
+  </div>
+  <div class="item">
+    <div class="row"><b>Chrome extensions<span class="status">shipped</span></b><span class="when">2026</span></div>
+    <p>Quick Pin, a local-first bookmark launcher; Bookmark Master, which removes duplicates and empty folders and suggests where bookmarks belong with OpenAI.</p>
+    <div class="stack">JavaScript · Manifest V3 · OpenAI API</div>
+  </div>
+</div>
+
+<h2>Experience</h2>
+<div class="item">
+  <div class="row"><b>Freelance Web Developer · Mazi Services</b><span class="when">Apr 2025 – Present</span></div>
+  <div class="sub">Self-employed · Halifax / Dartmouth, NS</div>
+  <ul>
+    <li>Design and build responsive websites for local businesses (Webflow, Wix, HTML/CSS/JS): intake meetings, requirements, iterations and launch.</li>
+    <li>Run free “digital walkthroughs” that audit a business’s site, Google listing, payments, email and automations, then fix what’s losing them customers.</li>
+    <li>Contra × Lovable Challenge entry: <i>Your Customs</i>, a booking flow for a custom-print shop that cuts owner back-and-forth.</li>
+  </ul>
+</div>
+<div class="item">
+  <div class="row"><b>Peer Educator (volunteer) · Concept Tutoring</b><span class="when">Apr 2023 – Jul 2024</span></div>
+  <div class="sub">Lagos, Nigeria · mentored 15+ peers in science, math and tech fundamentals; planned sessions and tracked progress.</div>
+</div>
+
+<h2>Education</h2>
+<div class="item">
+  <div class="row"><b>IT Programming Diploma · Nova Scotia Community College</b><span class="when">Expected 2027</span></div>
+  <div class="sub">Halifax, NS · Coursework: Web Application Programming (ASP.NET Core MVC, EF Core), Mobile Development (Android, Jetpack Compose), C++, Advanced Topics (C# async, sockets, delegates, threads), Object-Oriented Programming, Programming in C, Linux, Systems Analysis &amp; Design, Project Management</div>
+</div>
+<div class="item">
+  <div class="row"><b>Senior Secondary Certificate · Mena College</b><span class="when">2024</span></div>
+  <div class="sub">Lagos, Nigeria · awarded for top academic performance in Grade 12 · represented the school at the Interswitch SPAK 5.0 STEM competition (2023)</div>
+</div>
+
+<div class="two">
+  <div>
+    <h2>Certifications</h2>
+    <p>Scrum Fundamentals Certified (SCRUMstudy, 2025)</p>
+    <p class="sub">LinkedIn Learning: Network Programming in C · IT Security Foundations: Network Security · Cisco Networking Foundations. Also WHMIS and First Aid / CPR / AED (2025).</p>
+  </div>
+  <div>
+    <h2>Community</h2>
+    <p class="sub">Soup Project volunteer, Cobequid Food Security Network (2025 – present) · Volunteer videographer, UACWA Black History Month (2026) · Guitarist, Cornerstone Anglican Church (2025 – present) · Writer, <a href="https://blog.mazidavid.com">blog.mazidavid.com</a></p>
+  </div>
+</div>
+
+</body></html>
