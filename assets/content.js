@@ -232,7 +232,7 @@ window.SITE = {
   /* ---------- /me: fallback profile + timeline (live copies are edited in /admin) ---------- */
   profile: {
     photo_url: "",
-    greeting: "Hi, I'm David. Most people call me Mazi.",
+    greeting: "Hi, I'm David, a.k.a. Mazi David.",
     bio: "From Lagos to Dartmouth, Nova Scotia. I study IT Programming at NSCC and spend the rest of my time building agents, extensions and small tools that do the boring parts for people.",
     roles: ["AI agents", "Raycast and Chrome extensions", "tools for students", "websites for local businesses"]
   },

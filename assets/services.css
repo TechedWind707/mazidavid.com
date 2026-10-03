@@ -11,7 +11,7 @@
      Variable NAMES kept from the brand board so the rest of the file didn't change:
        --green  = ripe olive (primary)      --amber = gold (the "repair" marker)
        --brick  = rose-deep (broken only)   --forest = black (dark panels)          */
-  --ink:#0D0D0B; --forest:#0D0D0B; --green:#556B2F; --amber:#D1A90A; --brick:#B0306A;
+  --ink:#0D0D0B; --forest:#0D0D0B; --green:#556B2F; --amber:#D1A90A; --brick:#ff0000;
   --stone:#5E5E57; --paper:#FFFFFF; --chalk:#F3F1EA; --line:#E2DFD4;
   --display:"Archivo", system-ui, sans-serif;
   --body:"Public Sans", system-ui, sans-serif;
