@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- Second mark: five linked systems, the lit one = where it's leaking -->
+  <polygon points="60,18 98,46 84,94 36,94 22,46" fill="none" stroke="#556B2F" stroke-width="8" stroke-linejoin="round"/>
+  <circle cx="60" cy="18" r="12" fill="#556B2F"/><circle cx="22" cy="46" r="12" fill="#556B2F"/>
+  <circle cx="36" cy="94" r="12" fill="#556B2F"/><circle cx="84" cy="94" r="12" fill="#556B2F"/>
+  <circle cx="98" cy="46" r="14" fill="#D1A90A"/>
+</svg>

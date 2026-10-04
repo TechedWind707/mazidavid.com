@@ -45,7 +45,17 @@ h2{font:700 clamp(26px,3.2vw,36px)/1.1 var(--display); letter-spacing:-.02em; ma
 .nav{position:sticky; top:0; z-index:20; background:var(--nav-bg); backdrop-filter:blur(8px); border-bottom:1px solid var(--line)}
 .nav-in{display:flex; align-items:center; gap:24px; height:68px}
 .brand{display:flex; align-items:center; gap:12px; text-decoration:none}
-.mark{width:30px; height:30px}
+.mark{width:36px; height:30px}
+/* logo colours: the M's own green + gold. Dark mode lifts the green so it doesn't vanish on black. */
+.mark .m{fill:var(--logo-green)} .mark .fix{fill:var(--logo-gold)}
+:root{--logo-green:#0D5C2E; --logo-gold:#E8A33D}
+:root[data-theme="dark"]{--logo-green:#3F9A62}
+/* the SECOND mark (five systems, one lit): small, next to "problem" headings */
+.sysmark{width:1.1em; height:1.1em; vertical-align:-.15em; margin-right:.4em; flex:none}
+.sysmark .lit{animation:blink 3s ease-in-out infinite}
+.ch .chl{display:flex; align-items:center}
+.ch .sysmark{width:15px; height:15px; margin-right:8px}
+h2.with-sys .sysmark{width:.9em; height:.9em; vertical-align:-.08em}
 .mark .lit{animation:blink 3s ease-in-out infinite}        /* the one lit node "pulses" */
 @keyframes blink{50%{opacity:.45}}
 .wm{font:700 20px var(--display); letter-spacing:-.02em}
