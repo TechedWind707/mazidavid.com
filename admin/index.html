@@ -198,8 +198,8 @@
           </div>
           <label>Title<input name="title" maxlength="140" required></label>
           <label>Text<textarea name="body" rows="4" maxlength="1200"></textarea></label>
-          <label>Picture URL <small>https only, or pick one from the gallery</small><input name="image_url" type="url" placeholder="https://"></label>
-          <div class="tagbtns"><button class="btn sm" type="button" id="tlPickPhoto">Pick from gallery</button><button class="btn sm" type="button" id="tlClearPhoto">Remove picture</button></div>
+          <label>Picture <small>upload one, pick from the gallery, or paste an https link</small><input name="image_url" placeholder="https://"></label>
+          <div class="tagbtns"><label class="btn sm upload-btn">Upload from device<input type="file" accept="image/*" id="tlUpload" hidden></label><button class="btn sm" type="button" id="tlPickPhoto">Pick from gallery</button><button class="btn sm" type="button" id="tlClearPhoto">Remove picture</button></div>
           <div class="picker" id="tlPicker" hidden></div>
           <img id="tlPreview" class="preview-img" alt="" hidden>
           <label>Picture description <small>for screen readers</small><input name="image_alt" maxlength="200"></label>
@@ -222,8 +222,8 @@
       <form class="card editor profile-form" id="profileForm">
         <div class="grid2">
           <div>
-            <label>Photo of you <small>https URL, or pick from the gallery</small><input name="photo_url" type="url" placeholder="https://"></label>
-            <div class="tagbtns" style="margin-top:8px"><button class="btn sm" type="button" id="pfPick">Pick from gallery</button><button class="btn sm" type="button" id="pfClear">Remove</button></div>
+            <label>Photo of you <small>upload one, pick from the gallery, or paste an https link</small><input name="photo_url" placeholder="https://"></label>
+            <div class="tagbtns" style="margin-top:8px"><label class="btn sm upload-btn">Upload from device<input type="file" accept="image/*" id="pfUpload" hidden></label><button class="btn sm" type="button" id="pfPick">Pick from gallery</button><button class="btn sm" type="button" id="pfClear">Remove</button></div>
             <div class="picker" id="pfPicker" hidden></div>
             <label style="margin-top:12px">Photo description<input name="photo_alt" maxlength="200" placeholder="Mazi David smiling at the camera"></label>
           </div>

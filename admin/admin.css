@@ -127,3 +127,4 @@ main.wrap{padding-top:26px; padding-bottom:60px}
 .portrait-prev{width:200px; aspect-ratio:4/5; justify-self:center}
 .profile-form{position:static; max-height:none}
 @media (max-width:900px){ .layout-split{grid-template-columns:1fr} }
+.upload-btn{cursor:pointer; background:var(--gold); border-color:var(--gold); color:var(--black)}

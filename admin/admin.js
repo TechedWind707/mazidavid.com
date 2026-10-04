@@ -251,6 +251,29 @@ $("#addLink").onclick = () => {
   };
 };
 
+/* ============================== UPLOADS ============================ */
+/* Pictures from your device: shrunk IN THE BROWSER first (max 1800px on
+   the long side, WebP), so a 6 MB phone photo becomes ~300 KB before it
+   ever leaves your laptop. The server re-checks the file type and size. */
+async function uploadImage(file, statusEl) {
+  if (!file) return null;
+  if (!file.type.startsWith("image/")) throw new Error("That isn't an image.");
+  say(statusEl, "Shrinking…");
+  let bmp;
+  try { bmp = await createImageBitmap(file, { imageOrientation: "from-image" }); }
+  catch { throw new Error("This browser can't read that format (iPhone HEIC?). Export it as JPEG first."); }
+  const scale = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
+  const w = Math.round(bmp.width * scale), h = Math.round(bmp.height * scale);
+  const canvas = document.createElement("canvas"); canvas.width = w; canvas.height = h;
+  canvas.getContext("2d").drawImage(bmp, 0, 0, w, h);
+  const blob = await new Promise((r) => canvas.toBlob(r, "image/webp", 0.85));
+  const data = await new Promise((r) => { const fr = new FileReader(); fr.onload = () => r(String(fr.result).split(",")[1]); fr.readAsDataURL(blob); });
+  say(statusEl, `Uploading ${Math.round(blob.size / 1024)} KB…`);
+  const j = await api("/api/admin?r=upload", "POST", { data, width: w, height: h });
+  say(statusEl, "Uploaded. Don't forget to Save.");
+  return j.url;
+}
+
 /* =========================== BOARD LAYOUT ========================== */
 /* The same board engine visitors see (assets/board.js) in "edit" mode.
    Moving a note just marks the layout dirty; Save sends every position. */
@@ -349,6 +372,11 @@ $("[data-cancel]", tf).onclick = () => { tf.hidden = true; editingTl = null; loa
 tf.image_url.addEventListener("input", showTlPreview);
 $("#tlPickPhoto").onclick = () => galleryPicker($("#tlPicker"), ({ url, title }) => { tf.image_url.value = url; if (!tf.image_alt.value) tf.image_alt.value = title; showTlPreview(); });
 $("#tlClearPhoto").onclick = () => { tf.image_url.value = ""; showTlPreview(); };
+$("#tlUpload").onchange = async (e) => {
+  try { const url = await uploadImage(e.target.files[0], $("#tlMsg")); if (url) { tf.image_url.value = url; showTlPreview(); } }
+  catch (err) { say($("#tlMsg"), err.message, false); }
+  e.target.value = "";
+};
 tf.addEventListener("submit", async (e) => {
   e.preventDefault();
   const data = { when_label: tf.when_label.value, sort_key: tf.sort_key.value.trim(), title: tf.title.value, body: tf.body.value, image_url: tf.image_url.value.trim(), image_alt: tf.image_alt.value, hidden: tf.hidden.checked };
@@ -373,6 +401,11 @@ async function loadProfile() {
 pf2.photo_url.addEventListener("input", showPfPreview);
 $("#pfPick").onclick = () => galleryPicker($("#pfPicker"), ({ url }) => { pf2.photo_url.value = url; showPfPreview(); });
 $("#pfClear").onclick = () => { pf2.photo_url.value = ""; showPfPreview(); };
+$("#pfUpload").onchange = async (e) => {
+  try { const url = await uploadImage(e.target.files[0], $("#pfMsg")); if (url) { pf2.photo_url.value = url; showPfPreview(); } }
+  catch (err) { say($("#pfMsg"), err.message, false); }
+  e.target.value = "";
+};
 pf2.addEventListener("submit", async (e) => {
   e.preventDefault();
   try {

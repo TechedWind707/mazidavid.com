@@ -14,6 +14,7 @@
    ?r=edges      GET · POST {from_id,to_id,label} · PUT ?id= {label} · DELETE ?id=
    ?r=timeline   GET · POST · PUT ?id= · DELETE ?id=
    ?r=settings   GET · PUT {photo_url, photo_alt, greeting, bio, roles[]}
+   ?r=upload     POST {data: base64, mime}  an image from your device (resized in the browser)
    ?r=audit      GET the last 60 admin events
    ===================================================================== */
 import { db } from "./_lib/db.js";
@@ -32,7 +33,7 @@ export default async function handler(req, res) {
   if (req.method !== "GET") {
     if (!checkOrigin(req, ADMIN_ORIGINS())) return send(res, 403, { error: "Bad origin" });
     if (req.method !== "DELETE") {
-      body = jsonBody(req, 60000);
+      body = jsonBody(req, r === "upload" ? 4_000_000 : 60000);
       if (!body) return send(res, 400, { error: "Expected JSON" });
     }
   }
@@ -45,6 +46,7 @@ export default async function handler(req, res) {
     if (r === "edges") return await edgesRoute(req, res, id, body);
     if (r === "timeline") return await timeline(req, res, id, body);
     if (r === "settings") return await settings(req, res, body);
+    if (r === "upload") return await upload(req, res, body);
     if (r === "audit" && req.method === "GET") {
       const rows = await db()`select at, action, detail from admin_audit order by id desc limit 60`;
       return send(res, 200, { audit: rows });
@@ -64,6 +66,7 @@ const str = (v, max) => String(v ?? "").trim().slice(0, max);
 const httpsUrl = (v) => {
   const s = str(v, 600);
   if (!s) return "";
+  if (/^\/api\/media\?id=\d+(&v=[a-f0-9]{8})?$/.test(s)) return s;   // an image uploaded through /admin
   try { const u = new URL(s); return u.protocol === "https:" ? u.toString() : ""; } catch { return ""; }
 };
 const strList = (v, maxItems, maxLen) =>
@@ -328,4 +331,35 @@ async function settings(req, res, body) {
     on conflict (key) do update set value = excluded.value, updated_at = now()`;
   await audit(req, "profile-update");
   return send(res, 200, { ok: true });
+}
+
+/* ------------------------------ upload ------------------------------ */
+/* The browser already shrank the picture (max 1800px, webp). Here we only
+   trust what we can verify: size limit, and the real file signature
+   ("magic bytes"), not the name or the mime the browser claims.        */
+const SIGNATURES = [
+  { mime: "image/jpeg", ok: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
+  { mime: "image/png", ok: (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) },
+  { mime: "image/webp", ok: (b) => b.toString("ascii", 0, 4) === "RIFF" && b.toString("ascii", 8, 12) === "WEBP" },
+];
+async function upload(req, res, body) {
+  if (req.method !== "POST") return send(res, 405, { error: "Method not allowed" });
+  let buf;
+  try { buf = Buffer.from(String(body.data || ""), "base64"); } catch { buf = Buffer.alloc(0); }
+  if (buf.length < 100) return send(res, 400, { error: "No image received" });
+  if (buf.length > 2_500_000) return send(res, 413, { error: "Image is too big (max 2.5 MB after resizing)" });
+  const kind = SIGNATURES.find((s) => s.ok(buf));
+  if (!kind) return send(res, 415, { error: "Only JPEG, PNG or WebP images" });
+  const { createHash } = await import("node:crypto");
+  const sha = createHash("sha256").update(buf).digest("hex");
+  const w = Math.max(0, Math.min(20000, Math.trunc(+body.width || 0))), h = Math.max(0, Math.min(20000, Math.trunc(+body.height || 0)));
+  const sql = db();
+  // Same picture uploaded twice → reuse the first copy
+  let rows = await sql`select id::int as id from media where sha256 = ${sha}`;
+  if (!rows.length) {
+    rows = await sql`insert into media (mime, bytes, width, height, sha256, size)
+      values (${kind.mime}, ${"\\x" + buf.toString("hex")}::bytea, ${w}, ${h}, ${sha}, ${buf.length}) returning id::int as id`;
+  }
+  await audit(req, "upload", `media ${rows[0].id} (${Math.round(buf.length / 1024)} KB)`);
+  return send(res, 201, { ok: true, url: `/api/media?id=${rows[0].id}&v=${sha.slice(0, 8)}` });
 }
