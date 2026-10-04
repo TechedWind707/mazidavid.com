@@ -8,6 +8,7 @@
    lengths and only allow https:// links.
 
    ?r=projects   GET list (incl. hidden) · POST create · PUT ?id= update · DELETE ?id=
+   ?r=readme     GET ?repo=https://github.com/owner/name → first real image in that README
    ?r=notes      GET list · POST create · PUT ?id= update · DELETE ?id=
    ?r=visitors   GET ?status=pending|approved · PUT ?id= {action} · DELETE ?id=
    ?r=layout     PUT {positions:[{id,x,y}]}  where notes sit on the board
@@ -47,6 +48,7 @@ export default async function handler(req, res) {
     if (r === "timeline") return await timeline(req, res, id, body);
     if (r === "settings") return await settings(req, res, body);
     if (r === "upload") return await upload(req, res, body);
+    if (r === "readme" && req.method === "GET") return await readmeImage(req, res);
     if (r === "audit" && req.method === "GET") {
       const rows = await db()`select at, action, detail from admin_audit order by id desc limit 60`;
       return send(res, 200, { audit: rows });
@@ -91,6 +93,7 @@ function cleanProject(b) {
     did: strList(b.did, 8, 300),
     stack: strList(b.stack, 12, 40),
     links,
+    image: httpsUrl(b.image),            // thumbnail: https link or an /api/media upload
     sort: Number.isFinite(+b.sort) ? Math.max(0, Math.min(9999, Math.trunc(+b.sort))) : 0,
   };
 }
@@ -131,9 +134,9 @@ async function projects(req, res, id, body) {
     const p = cleanProject(body);
     const newId = str(body.id, 60).toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
     if (!newId || !p.title) return send(res, 400, { error: "id and title are required" });
-    await sql`insert into projects (id, title, kind, status, school, featured, hidden, year, summary, did, stack, links, sort)
+    await sql`insert into projects (id, title, kind, status, school, featured, hidden, year, summary, did, stack, links, image, sort)
       values (${newId}, ${p.title}, ${p.kind}, ${p.status}, ${p.school}, ${p.featured}, ${p.hidden}, ${p.year}, ${p.summary},
-              ${JSON.stringify(p.did)}::jsonb, ${JSON.stringify(p.stack)}::jsonb, ${JSON.stringify(p.links)}::jsonb, ${p.sort})`;
+              ${JSON.stringify(p.did)}::jsonb, ${JSON.stringify(p.stack)}::jsonb, ${JSON.stringify(p.links)}::jsonb, ${p.image}, ${p.sort})`;
     await audit(req, "project-create", newId);
     return send(res, 201, { ok: true, id: newId });
   }
@@ -144,7 +147,7 @@ async function projects(req, res, id, body) {
     const rows = await sql`update projects set title=${p.title}, kind=${p.kind}, status=${p.status}, school=${p.school},
       featured=${p.featured}, hidden=${p.hidden}, year=${p.year}, summary=${p.summary},
       did=${JSON.stringify(p.did)}::jsonb, stack=${JSON.stringify(p.stack)}::jsonb, links=${JSON.stringify(p.links)}::jsonb,
-      sort=${p.sort}, updated_at=now() where id=${id} returning id`;
+      image=${p.image}, sort=${p.sort}, updated_at=now() where id=${id} returning id`;
     if (!rows.length) return send(res, 404, { error: "Not found" });
     await audit(req, "project-update", id);
     return send(res, 200, { ok: true });
@@ -155,6 +158,33 @@ async function projects(req, res, id, body) {
     return send(res, 200, { ok: true });
   }
   return send(res, 405, { error: "Method not allowed" });
+}
+
+/* ----------------------- README → thumbnail ----------------------- */
+/* Given a GitHub repo link, read its README through GitHub's public API and
+   return the first image that isn't a badge (shields.io etc). Relative paths
+   like ./docs/shot.png are turned into full raw.githubusercontent.com links.
+   Only github.com repos are accepted, so this can't be used to fetch
+   arbitrary URLs from the server. */
+async function readmeImage(req, res) {
+  const m = String(req.query.repo || "").match(/^https:\/\/github\.com\/([\w.-]{1,100})\/([\w.-]{1,100}?)(?:\.git)?\/?$/);
+  if (!m) return send(res, 400, { error: "Give the repo link, like https://github.com/you/project" });
+  const [, owner, repo] = m;
+  const r = await fetch(`https://api.github.com/repos/${owner}/${repo}/readme`, {
+    headers: { Accept: "application/vnd.github.raw+json", "User-Agent": "mazidavid-admin" },
+  });
+  if (!r.ok) return send(res, 404, { error: r.status === 404 ? "No README found in that repo." : "GitHub didn't answer, try again." });
+  const text = (await r.text()).slice(0, 400_000);
+  const found = [...text.matchAll(/!\[[^\]]*\]\(\s*<?([^)\s>]+)>?[^)]*\)|<img[^>]+src=["']([^"']+)["']/gi)].map((x) => x[1] || x[2]);
+  const isBadge = (u) => /shields\.io|badge|badgen|travis-ci|circleci|codecov|\/actions\/workflows\/|img\.icons8|\.svg(\?|$)/i.test(u);
+  const pick = found.find((u) => !isBadge(u));
+  if (!pick) return send(res, 404, { error: "That README has no picture (badges skipped)." });
+  let url;
+  try { url = new URL(pick, `https://raw.githubusercontent.com/${owner}/${repo}/HEAD/`); } catch { url = null; }
+  // github.com/.../blob/... image links → their raw version
+  if (url && url.hostname === "github.com" && url.pathname.includes("/blob/")) url = new URL(`https://raw.githubusercontent.com${url.pathname.replace("/blob/", "/")}`);
+  if (!url || url.protocol !== "https:") return send(res, 404, { error: "Found an image but its link isn't https." });
+  return send(res, 200, { image: url.toString() });
 }
 
 /* ------------------------------ notes ----------------------------- */

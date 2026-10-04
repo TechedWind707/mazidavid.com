@@ -39,6 +39,11 @@ section.block > .sub{color:var(--muted); margin:0 0 20px}
 .proj{display:flex; flex-direction:column; gap:10px; position:relative; overflow:hidden; transition:transform .2s, box-shadow .2s}
 .proj:hover{transform:translateY(-3px); box-shadow:var(--shadow-lift)}
 .proj::before{content:""; position:absolute; left:0; right:0; top:0; height:4px; background:var(--gold)}
+/* thumbnail (optional, set in /admin): sits flush at the top of the card */
+.proj .thumb{margin:-20px -22px 4px; aspect-ratio:16/9; background:var(--paper-2); overflow:hidden}
+.proj .thumb img{width:100%; height:100%; object-fit:cover; display:block}
+.proj:has(.thumb)::before{z-index:1}
+.rows .body .thumb{display:block; max-width:420px; aspect-ratio:16/9; object-fit:cover; border-radius:var(--r-md,10px); border:1px solid var(--line); margin:8px 0 10px; background:var(--paper-2)}
 .proj .top{display:flex; justify-content:space-between; gap:10px; align-items:center}
 .proj h3{font:600 24px/1.15 var(--serif); margin:4px 0 0}
 .proj p{margin:0; color:var(--muted)}
@@ -200,6 +205,7 @@ const linkRow = (l = {}) => {
 function renderFeatured() {
 document.getElementById("featured").innerHTML = PROJECTS.filter(p => p.featured).map(p => `
   <article class="card proj">
+    ${p.image ? `<div class="thumb"><img src="${esc(p.image)}" alt="" loading="lazy" onerror="this.parentNode.remove()"></div>` : ""}
     <div class="top"><span class="eyebrow" style="margin:0">${esc(p.year)} · ${esc(p.kind)}</span>${badge(p)}</div>
     <h3>${esc(p.title)}</h3>
     <p>${esc(p.summary)}</p>
@@ -230,6 +236,7 @@ function renderRows() {
     <details>
       <summary><b>${esc(p.title)}${p.school ? ` <span class="school">school</span>` : ""}<span class="muted">${esc(p.stack.slice(0, 2).join(" · "))}</span></b>${badge(p)}<span class="yr">${esc(p.year)}</span></summary>
       <div class="body">
+        ${p.image ? `<img class="thumb" src="${esc(p.image)}" alt="" loading="lazy" onerror="this.remove()">` : ""}
         <p>${esc(p.summary)}</p>
         ${p.did.length ? `<ul>${p.did.map(d => `<li>${esc(d)}</li>`).join("")}</ul>` : ""}
         ${linkRow(p.links)}
@@ -253,7 +260,7 @@ document.getElementById("skills").innerHTML = SITE.skills.map(g =>
   `<div class="card"><h3>${esc(g.group)}</h3><div class="pills">${g.items.map(i => `<span class="tag olive">${esc(i)}</span>`).join("")}</div></div>`).join("");
 
 // ---- timeline ----
-document.getElementById("timeline").innerHTML = SITE.timeline.map(t =>
+document.getElementById("timeline").innerHTML = (SITE.experience || []).map(t =>
   `<div class="when">${esc(t.when)}</div><div class="what"><b>${esc(t.what)}</b><span>${esc(t.where)}</span></div>`).join("");
 
 // ---- footer ----

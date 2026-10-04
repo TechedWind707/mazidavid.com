@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   if (req.method !== "GET") return send(res, 405, { error: "Method not allowed" }, { Allow: "GET" });
   try {
     const rows = await db()`
-      select id, title, kind, status, school, featured, year, summary, did, stack, links
+      select id, title, kind, status, school, featured, year, summary, did, stack, links, image
       from projects where hidden = false
       order by sort asc, updated_at desc`;
     return send(res, 200, { projects: rows }, {

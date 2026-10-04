@@ -95,6 +95,9 @@
             <label>Repo URL<input name="repo" type="url" placeholder="https://"></label>
             <label>Write-up URL<input name="post" type="url" placeholder="https://"></label>
           </div>
+          <label>Thumbnail <small>pull it from the repo's README, upload one, or paste an https link. Empty = no picture.</small><input name="image" placeholder="https://"></label>
+          <div class="tagbtns"><button class="btn sm" type="button" id="projReadme">Use image from README</button><label class="btn sm upload-btn">Upload from device<input type="file" accept="image/*" id="projUpload" hidden></label><button class="btn sm" type="button" id="projClearImg">Remove</button></div>
+          <img id="projPreview" class="preview-img" alt="" hidden>
           <div class="actions">
             <button class="btn solid" type="submit">Save</button>
             <button class="btn" type="button" data-cancel>Cancel</button>
@@ -229,7 +232,7 @@
           </div>
           <img id="pfPreview" class="preview-img portrait-prev" alt="" hidden>
         </div>
-        <label>Greeting <small>the big headline; the word "Mazi" gets the handwritten style</small><input name="greeting" maxlength="140"></label>
+        <label>Greeting <small>the big headline; put *stars* around the handwritten part, e.g. Hi, I'm David. aka *Mazi David*</small><input name="greeting" maxlength="140"></label>
         <label>Short bio<textarea name="bio" rows="4" maxlength="1200"></textarea></label>
         <label>"I build …" line <small>one per line; they type out one after another</small><textarea name="roles" rows="5"></textarea></label>
         <div class="actions"><button class="btn solid" type="submit">Save</button></div>

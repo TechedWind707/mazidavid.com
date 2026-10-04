@@ -212,7 +212,14 @@ const noteHtml = n => `<div class="k">${KIND[n.kind] || n.kind}${n.pinned ? " ·
 
 /* ---------------------------- 1. HELLO ---------------------------- */
 function renderHello(p = {}) {
-  if (p.greeting) document.getElementById("greeting").innerHTML = esc(p.greeting).replace(/Mazi/, '<span class="scribble">Mazi</span>');
+  // Words between *stars* get the handwritten style ("Hi, I'm David. aka *Mazi David*").
+  // No stars → the first "Mazi" gets it, like before.
+  if (p.greeting) {
+    const g = esc(p.greeting);
+    document.getElementById("greeting").innerHTML = /\*[^*]+\*/.test(g)
+      ? g.replace(/\*([^*]+)\*/g, '<span class="scribble">$1</span>')
+      : g.replace(/Mazi/, '<span class="scribble">Mazi</span>');
+  }
   document.getElementById("bio").textContent = p.bio || P.oneLiner;
   const box = document.getElementById("portrait"), hello = document.getElementById("hello");
   if (p.photo_url) {                      // only show the photo frame when there IS a photo

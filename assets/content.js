@@ -213,12 +213,15 @@ window.SITE = {
     { group: "Platforms & tools", items: ["Git & GitHub", "Supabase", "Vercel", "Docker", "Bun", "Figma", "Raycast API", "Chrome extensions (MV3)", "Linux"] }
   ],
 
-  timeline: [
+  /* work.mazidavid.com "Education & experience". (Named "experience" so it
+     doesn't clash with the /me life-story "timeline" further down.) */
+  experience: [
     { when: "Now", what: "IT Programming diploma (2nd year)", where: "Nova Scotia Community College, Halifax" },
     { when: "Now", what: "Founder, Mazi Services", where: "Finding and fixing what's broken in local businesses' online setup" },
     { when: "2026", what: "Hackathon build: HFX TreeWatch", where: "AI triage for Halifax 311 tree requests" },
     { when: "2026", what: "Contra × Lovable Challenge", where: "Your Customs booking flow" },
-    { when: "2025 –", what: "Writing", where: "The Mazi David Blog on Hashnode" }
+    { when: "2025 –", what: "Writing", where: "The Mazi David Blog on Hashnode" },
+    { when: "2024", what: "Best graduating student", where: "Mena College, Lagos" }
   ],
 
   /* Fallback list for the hub if Hashnode can't be reached live */
@@ -232,7 +235,7 @@ window.SITE = {
   /* ---------- /me: fallback profile + timeline (live copies are edited in /admin) ---------- */
   profile: {
     photo_url: "",
-    greeting: "Hi, I'm David, a.k.a. Mazi David.",
+    greeting: "Hi, I'm David. aka *Mazi David*",   // *stars* = the handwritten part
     bio: "From Lagos to Dartmouth, Nova Scotia. I study IT Programming at NSCC and spend the rest of my time building agents, extensions and small tools that do the boring parts for people.",
     roles: ["AI agents", "Raycast and Chrome extensions", "tools for students", "websites for local businesses"]
   },

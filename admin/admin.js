@@ -92,6 +92,7 @@ function openProject(p) {
   pf.featured.checked = !!v.featured; pf.school.checked = !!v.school; pf.hidden.checked = !!v.hidden;
   pf.summary.value = v.summary; pf.did.value = (v.did || []).join("\n"); pf.stack.value = (v.stack || []).join("\n");
   pf.live.value = v.links?.live || ""; pf.repo.value = v.links?.repo || ""; pf.post.value = v.links?.post || "";
+  pf.image.value = v.image || ""; showProjPreview();
   $("#deleteProject").hidden = !p;
   pf.title.focus();
 }
@@ -106,6 +107,7 @@ pf.addEventListener("submit", async (e) => {
     year: pf.year.value, sort: Number(pf.sort.value), featured: pf.featured.checked, school: pf.school.checked,
     hidden: pf.hidden.checked, summary: pf.summary.value, did: lines(pf.did.value), stack: lines(pf.stack.value),
     links: { live: pf.live.value.trim(), repo: pf.repo.value.trim(), post: pf.post.value.trim() },
+    image: pf.image.value.trim(),
   };
   try {
     if (editingProject) await api(`/api/admin?r=projects&id=${encodeURIComponent(editingProject)}`, "PUT", data);
@@ -116,6 +118,26 @@ pf.addEventListener("submit", async (e) => {
     say($("#projectMsg"), "Saved. The public site updates within a minute.");
   } catch (err) { say($("#projectMsg"), err.message, false); }
 });
+/* Project thumbnail: README image (server reads the repo's README on GitHub),
+   an upload, or a pasted link. The preview shows exactly what will be saved. */
+function showProjPreview() { const u = pf.image.value.trim(); $("#projPreview").hidden = !u; if (u) $("#projPreview").src = u; }
+pf.image.addEventListener("input", showProjPreview);
+$("#projClearImg").onclick = () => { pf.image.value = ""; showProjPreview(); };
+$("#projReadme").onclick = async () => {
+  const repo = pf.repo.value.trim();
+  if (!repo) return say($("#projectMsg"), "Fill in the Repo URL first.", false);
+  say($("#projectMsg"), "Reading the README…");
+  try {
+    const j = await api(`/api/admin?r=readme&repo=${encodeURIComponent(repo)}`);
+    pf.image.value = j.image; showProjPreview();
+    say($("#projectMsg"), "Found one. Check the preview, then Save.");
+  } catch (err) { say($("#projectMsg"), err.message, false); }
+};
+$("#projUpload").onchange = async (e) => {
+  try { const url = await uploadImage(e.target.files[0], $("#projectMsg")); if (url) { pf.image.value = url; showProjPreview(); } }
+  catch (err) { say($("#projectMsg"), err.message, false); }
+  e.target.value = "";
+};
 armDelete($("#deleteProject"), async () => {
   try {
     await api(`/api/admin?r=projects&id=${encodeURIComponent(editingProject)}`, "DELETE");
