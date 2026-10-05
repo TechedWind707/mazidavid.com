@@ -17,7 +17,7 @@
   --body:"Public Sans", system-ui, sans-serif;
   --r-s:10px; --r-m:14px; --r-l:20px;   /* rounder, to match the other sites */
   --nav-bg:rgba(255,255,255,.94); --green-wash:#EEF1E6; --sub:#3B4034; --green-fg:#556B2F;
-  color-scheme:light;   /* stops phone browsers (Samsung Internet, Chrome "auto dark") repainting light mode */
+  color-scheme:only light;   /* "only" = phone browsers that force dark (Brave night mode, Chrome auto-dark, Samsung) must leave light mode alone */
 }
 /* DARK MODE: toggled by the sun/moon button in the nav (services-theme.js).
    Only the surfaces and text flip; buttons keep their fills. */

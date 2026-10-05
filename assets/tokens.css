@@ -39,7 +39,7 @@
 
 /* ---------- LIGHT (default when nothing else is set) ---------- */
 :root, :root[data-theme="light"]{
-  color-scheme:light;
+  color-scheme:only light;   /* "only" stops phones that force dark (Brave night mode, Chrome auto-dark) from repainting light mode */
   --bg:#FFFFFF; --fg:#0D0D0B; --fg-2:#5E5E57;
   --surface:#FFFFFF; --surface-2:#F6F5F0; --hair:#E6E4DC;
   --accent-fg:#7A6000; --olive-fg:#3E4F21; --rose-fg:#B0306A;

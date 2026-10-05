@@ -6,7 +6,10 @@
      - click it → a little card opens with every site + the theme switch
      - leave it alone for a few seconds → it shrinks to a tiny gold dot,
        so it never competes with the page (good for recruiters on work.)
-     - move the mouse near the corner, scroll up, or tab to it → it grows back
+     - move the mouse near it, scroll up, or tab to it → it grows back
+     - DRAG it (mouse or finger) to any edge of the screen if it's in the
+       way; it snaps to the nearest side and remembers the spot
+     - it hides itself while a photo viewer (.lightbox.is-open) is open
 
    Usage (first thing inside <body>):
      <script src="/assets/eco-nav.js" data-current="work" data-default="light"></script>
@@ -49,6 +52,9 @@
   }
   function applyTheme(t) {
     document.documentElement.dataset.theme = t;
+    // "only light" = phones that force dark (Brave night mode, Chrome auto-dark)
+    // must leave light mode alone; without it they repaint the page darker.
+    document.documentElement.style.colorScheme = t === "dark" ? "dark" : "only light";
     window.dispatchEvent(new CustomEvent("md-theme", { detail: { theme: t } }));
   }
   applyTheme(readTheme());          // runs before the page paints its content
@@ -97,6 +103,11 @@
   .mdnav-switch i{position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#F3F1EA; transition:transform .25s; display:grid; place-items:center; font-style:normal; font-size:11px}
   html[data-theme="dark"] .mdnav-switch{background:#D1A90A}
   html[data-theme="dark"] .mdnav-switch i{transform:translateX(20px); background:#0D0D0B; color:#D1A90A}
+  .mdnav.dragging .mdnav-btn{transform:scale(1.12); cursor:grabbing; transition:none}
+  .mdnav.left .mdnav-panel{right:auto; left:0; transform-origin:bottom left}
+  .mdnav.top .mdnav-panel{bottom:auto; top:62px}
+  .mdnav.left.asleep::after{right:auto; left:-14px}
+  body:has(.lightbox.is-open) .mdnav{display:none}
   @media (prefers-reduced-motion:reduce){.mdnav *{transition:none !important}}
   @media print{.mdnav{display:none}}`;
   const style = document.createElement("style");
@@ -133,19 +144,75 @@
 
   /* ---------------- open / close ---------------- */
   const setOpen = (o) => { nav.classList.toggle("open", o); btn.setAttribute("aria-expanded", String(o)); if (o) wake(); };
-  btn.addEventListener("click", (e) => { e.stopPropagation(); setOpen(!nav.classList.contains("open")); });
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (justDragged) { justDragged = false; return; }   // the end of a drag is not a click
+    setOpen(!nav.classList.contains("open"));
+  });
   document.addEventListener("click", (e) => { if (!nav.contains(e.target)) setOpen(false); });
   document.addEventListener("keydown", (e) => { if (e.key === "Escape") setOpen(false); });
 
+  /* ---------------- drag to move ----------------
+     Press and move more than 6px = a drag. On release it snaps to the
+     nearest side (left/right) at that height, and the spot is saved per
+     device in localStorage ("md_nav_pos": side + height as a fraction). */
+  const POS_KEY = "md_nav_pos";
+  let justDragged = false, drag = null;
+  function place(side, frac) {
+    frac = Math.min(Math.max(frac, 0), 1);
+    const h = innerHeight - 66;                        // keep the button fully on screen
+    nav.style.top = `${Math.round(12 + frac * (h - 12))}px`;
+    nav.style.bottom = "auto";
+    nav.style.left = side === "left" ? "18px" : "auto";
+    nav.style.right = side === "left" ? "auto" : "18px";
+    nav.classList.toggle("left", side === "left");
+    nav.classList.toggle("top", frac < 0.5);           // near the top → menu opens downwards
+  }
+  try { const p = JSON.parse(localStorage.getItem(POS_KEY) || "null"); if (p && p.side) place(p.side, p.frac); } catch {}
+  btn.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    drag = { x: e.clientX, y: e.clientY, moved: false };
+    btn.setPointerCapture(e.pointerId);
+  });
+  btn.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 6) return;
+    drag.moved = true;
+    nav.classList.add("dragging"); nav.classList.remove("asleep"); setOpen(false);
+    nav.style.left = `${e.clientX - 24}px`; nav.style.top = `${e.clientY - 24}px`;
+    nav.style.right = nav.style.bottom = "auto";
+  });
+  const endDrag = (e) => {
+    if (!drag) return;
+    if (drag.moved) {
+      const side = e.clientX < innerWidth / 2 ? "left" : "right";
+      const frac = (e.clientY - 36) / Math.max(1, innerHeight - 78);
+      place(side, frac);
+      try { localStorage.setItem(POS_KEY, JSON.stringify({ side, frac: Math.min(Math.max(frac, 0), 1) })); } catch {}
+      justDragged = true; setTimeout(() => (justDragged = false), 400);
+      wake();
+    }
+    nav.classList.remove("dragging");
+    drag = null;
+  };
+  btn.addEventListener("pointerup", endDrag);
+  btn.addEventListener("pointercancel", endDrag);
+  btn.style.touchAction = "none";                      // lets a finger drag it instead of scrolling the page
+  addEventListener("resize", () => {
+    try { const p = JSON.parse(localStorage.getItem(POS_KEY) || "null"); if (p && p.side) place(p.side, p.frac); } catch {}
+  });
+
   /* ---------------- sleep / wake ----------------
      Shrinks to a dot after 2.5s idle. Wakes when the mouse comes within
-     160px of the corner, on focus, or when the visitor scrolls back up.  */
+     160px of the button (wherever it is), on focus, or when the visitor
+     scrolls back up.  */
   let timer;
   function sleep() { if (!nav.classList.contains("open") && !nav.contains(document.activeElement)) nav.classList.add("asleep"); }
   function wake() { nav.classList.remove("asleep"); clearTimeout(timer); timer = setTimeout(sleep, 2500); }
   wake();
   addEventListener("pointermove", (e) => {
-    if (innerWidth - e.clientX < 160 && innerHeight - e.clientY < 160) wake();
+    const r = btn.getBoundingClientRect();
+    if (Math.abs(e.clientX - (r.left + r.width / 2)) < 160 && Math.abs(e.clientY - (r.top + r.height / 2)) < 160) wake();
   }, { passive: true });
   let lastY = scrollY;
   addEventListener("scroll", () => { if (scrollY < lastY - 40) wake(); lastY = scrollY; }, { passive: true });
