@@ -236,7 +236,7 @@ window.SITE = {
   profile: {
     photo_url: "",
     greeting: "Hi, I'm David. aka *Mazi David*",   // *stars* = the handwritten part
-    bio: "From Lagos to Dartmouth, Nova Scotia. I study IT Programming at NSCC and spend the rest of my time building agents, extensions and small tools that do the boring parts for people.",
+    bio: "From Lagos → Dartmouth, Nova Scotia. I study IT Programming at NSCC and spend the rest of my time building agents, extensions and small tools that do the boring parts for people.",
     roles: ["AI agents", "Raycast and Chrome extensions", "tools for students", "websites for local businesses"]
   },
   timeline: [

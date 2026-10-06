@@ -33,6 +33,9 @@
 .portrait{width:min(300px,70vw); aspect-ratio:4/5; border-radius:40% 40% var(--r-xl) var(--r-xl); overflow:hidden; position:relative;
   box-shadow:0 0 0 6px var(--bg), 0 0 0 8px var(--gold), var(--shadow-lift); transform:rotate(-2deg)}
 .portrait img{width:100%; height:100%; object-fit:cover}
+.portrait{cursor:pointer}
+.portrait img{position:absolute; inset:0; opacity:0; transition:opacity .4s}
+.portrait img.on{opacity:1}
 .hello h1{font-size:clamp(40px,6vw,74px); max-width:16ch}
 .hello h1 .scribble{font-family:var(--hand); font-weight:700; color:var(--accent-fg); font-size:.8em; display:inline-block; transform:rotate(-4deg)}
 .typed{font:500 clamp(20px,2.4vw,28px)/1.3 var(--serif); margin:18px 0 0; min-height:1.3em}
@@ -111,6 +114,8 @@
   .ti .txt,.ti:nth-child(odd of .ti) .txt{grid-column:1; grid-row:1; text-align:left; transform:translateY(20px)}
   .ti .pic,.ti:nth-child(odd of .ti) .pic{grid-column:1; grid-row:2; justify-self:start; transform:translateY(20px)}
 }
+
+
 </style>
 </head>
 <body>
@@ -121,6 +126,7 @@
     <div class="portrait" id="portrait" hidden></div>
     <div>
       <p class="eyebrow">me.mazidavid.com · the person</p>
+      <!-- <img class="portrait-img" src="/assets/me/Memoji.webp" alt="Memoji of David"> -->
       <h1 class="h-serif" id="greeting">Hi, I'm David. aka <span class="scribble">Mazi David</span></h1>
       <p class="typed" aria-live="off">I build <b id="typed"></b></p>
       <p class="bio" id="bio"></p>
@@ -144,7 +150,7 @@
 
   <!-- 3. TIMELINE -->
   <section class="sec" id="timeline-sec">
-    <div class="sec-head"><div><h2 class="h-serif">How I got here</h2><p>From Lagos to Dartmouth, one exam at a time.</p></div></div>
+    <div class="sec-head"><div><h2 class="h-serif">How I got here</h2><p>From Lagos <b>→</b> Dartmouth.</p></div></div>
     <div class="tl" id="tl"><div class="fill"></div></div>
   </section>
 
@@ -222,10 +228,29 @@ function renderHello(p = {}) {
   }
   document.getElementById("bio").textContent = p.bio || P.oneLiner;
   const box = document.getElementById("portrait"), hello = document.getElementById("hello");
-  if (p.photo_url) {                      // only show the photo frame when there IS a photo
-    box.innerHTML = `<img src="${esc(p.photo_url)}" alt="${esc(p.photo_alt || "Mazi David")}">`;
-    box.hidden = false; hello.classList.remove("nophoto");
-  }
+  const PHOTOS = ["/assets/me/Memoji.webp", "/assets/me/Me1.webp", "/assets/me/Me2.webp", "/assets/me/Me3.webp", "/assets/me/Me4.webp"];
+  box.innerHTML = PHOTOS.map((src, i) =>
+    `<img src="${src}" alt="${i === 0 ? "Picture of David" : ""}" class="${i === 0 ? "on" : ""}">`).join("");
+  box.hidden = false; hello.classList.remove("nophoto");
+
+  box.setAttribute("role", "button");
+  box.setAttribute("aria-label", "Show another photo of David");
+  box.tabIndex = 0;
+
+  let shown = 0;
+  let userClicks = 0;
+  const next = () => {
+    userClicks++;
+    
+    // if ((userClicks % 3) !== 0) return;
+    const imgs = box.querySelectorAll("img");
+    if ((userClicks % 4) !== 0) return;
+    imgs[shown].classList.remove("on");
+    shown = (shown + 1) % imgs.length;
+    imgs[shown].classList.add("on");
+  };
+box.onclick = next;
+box.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); next(); } };
   startTyping(p.roles?.length ? p.roles : ["AI agents", "browser extensions", "tools for students"]);
 }
 /* The "I build …" line types, pauses, deletes and moves to the next role */
