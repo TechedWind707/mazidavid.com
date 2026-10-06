@@ -194,18 +194,25 @@ h1 u{text-decoration:none; border-bottom:6px solid var(--amber)}
 /* PHONE NAV: logo + CTA + theme button must fit on one line. Before this,
    the wordmark and the CTA wrapped onto two lines and pushed the theme
    button past the right edge of the screen (sideways scrolling). */
+
 @media (max-width:600px){
   .nav-in{gap:10px; height:60px}
-  .brand{gap:8px; min-width:0}
+  .brand{min-width:0}
   .wm{font-size:17px; white-space:nowrap}
   .links{gap:8px}
   .links .btn.sm{padding:8px 12px; font-size:14px; white-space:nowrap}
   .theme-btn{width:36px; height:36px; flex:none}
+}
+@media(max-width:469px){
+  .checklist{margin-bottom:15%}
 }
 @media (max-width:360px){ .wm span{display:none} }   /* tiny phones: just "Mazi" */
 html,body{overflow-x:hidden}
 @media (max-width:520px){
   .systems,.prices{grid-template-columns:1fr}
   .wrap{padding:0 18px} .section{padding:56px 18px}
+}
+@media(max-width:275px){
+  .wm{display:none};
 }
 :root[data-theme="dark"] .price.featured{border-color:var(--amber)}

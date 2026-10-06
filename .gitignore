@@ -7,3 +7,4 @@ ADMIN-SECRETS*.txt
 
 .vercel
 .env*
+.vscode
