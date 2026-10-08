@@ -21,7 +21,6 @@ window.SITE = {
       linkedin: "https://www.linkedin.com/in/david-nsofor",
       blog:     "https://blog.mazidavid.com",
       gallery:  "https://gallery.mazidavid.com",
-      services: "https://services.mazidavid.com",
       x:        "https://x.com/MaziDavid_c3",
       linktree: "https://linktr.ee/mazidavid.c3"
     },
@@ -170,7 +169,8 @@ window.SITE = {
       summary: "My small-business side: a free walkthrough of a local business's site, Google listing, payments, email and automations, then fixing what's leaking customers.",
       did: ["Interactive self-check and booking flow", "Shares the design system with the rest of mazidavid.com"],
       stack: ["HTML", "CSS", "JavaScript", "Vercel"],
-      links: { live: "https://services.mazidavid.com" }
+      hidden: true,       // private for now: not shown, not linked
+      links: {}
     },
     {
       id: "code-in-motion", title: "Code in Motion", kind: "ai", status: "ideation", year: "2026",

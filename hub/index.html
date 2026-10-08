@@ -99,24 +99,18 @@
       <h2>Blog</h2>
       <p>Guides, tools and things I figured out.</p>
     </a>
-    <a class="door" href="https://gallery.mazidavid.com">
+    <a class="door big" href="https://gallery.mazidavid.com">
       <span class="arrow">&nearr;</span>
       <span class="k">Gallery</span>
       <h2>Gallery</h2>
       <p>The photos I think are eyeworthy.</p>
       <span class="live" id="galleryLive">photographs</span>
     </a>
-    <a class="door me" href="https://me.mazidavid.com">
+    <a class="door me big" href="https://me.mazidavid.com">
       <span class="arrow">&nearr;</span>
       <span class="k">Me</span>
       <h2>The person</h2>
       <p>Aims, half-formed ideas, the crazier side.</p>
-    </a>
-    <a class="door services" href="https://services.mazidavid.com">
-      <span class="arrow">&nearr;</span>
-      <span class="k">Services</span>
-      <h2>Mazi Services</h2>
-      <p>Free walkthrough of your business's online setup.</p>
     </a>
   </nav>
 
@@ -142,7 +136,7 @@ document.getElementById("fact").textContent = `Fun fact: ${P.funFact}`;
 /* Work door count: live from the database, content.js as the fallback */
 const countWork = list => document.getElementById("workLive").textContent =
   `${list.length} projects · ${list.filter(p => p.status === "ongoing").length} ongoing`;
-countWork(SITE.projects);
+countWork(SITE.projects.filter(p => !p.hidden));
 fetch("/api/projects").then(r => r.ok ? r.json() : null).then(j => j?.projects?.length && countWork(j.projects)).catch(() => {});
 
 /* ---------- Everywhere else ---------- */

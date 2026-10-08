@@ -69,6 +69,12 @@ section.block > .sub{color:var(--muted); margin:0 0 20px}
 .proj-dlg .close{position:sticky; top:12px; float:right; margin:12px 12px -48px 0; z-index:2; width:40px; height:40px; border-radius:50%;
   border:1px solid var(--hair); background:var(--surface); color:var(--fg); font-size:20px; cursor:pointer}
 .proj-dlg .close:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+/* previous / next project, at the bottom of the lightbox */
+.proj-dlg .pager{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:14px 26px 22px; border-top:1px solid var(--hair)}
+.proj-dlg .pager button{font:500 14px var(--sans); color:var(--fg); background:var(--surface-2); border:1px solid var(--hair); border-radius:var(--r-pill); padding:8px 14px; cursor:pointer}
+.proj-dlg .pager button:hover{border-color:var(--gold)}
+.proj-dlg .pager button:focus-visible{outline:3px solid var(--gold); outline-offset:2px}
+.proj-dlg .pager span{font:500 13px var(--mono); color:var(--muted)}
 .stack{display:flex; gap:6px; flex-wrap:wrap; margin-top:auto; padding-top:10px}
 .links{display:flex; gap:16px; font:500 14px var(--mono)}
 .links a{color:var(--olive-fg); text-decoration:none; border-bottom:1.5px solid var(--wash-olive)}
@@ -199,7 +205,7 @@ const P = SITE.person;
 
 /* Projects come from the database (edited at /admin). content.js is the
    fallback, so the page renders instantly and still works if the API is down. */
-let PROJECTS = SITE.projects;
+let PROJECTS = SITE.projects.filter(p => !p.hidden);
 const badge = p => `<span class="status st-${esc(p.status)}">${esc(p.status)}</span>`;
 
 // ---- intro + buttons ----
@@ -260,10 +266,23 @@ function openProject(i) {
       ${p.did.length ? `<div><p class="eyebrow" style="margin:4px 0 6px">What I did</p><ul>${p.did.map(d => `<li>${esc(d)}</li>`).join("")}</ul></div>` : ""}
       <div class="stack">${pills(p.stack)}</div>
       ${linkRow(p.links)}
-    </div>`;
+    </div>
+    ${FEATURED.length > 1 ? `<div class="pager">
+      <button type="button" data-step="-1" aria-label="Previous project">← ${esc(FEATURED[(i - 1 + FEATURED.length) % FEATURED.length].title)}</button>
+      <span>${i + 1} / ${FEATURED.length}</span>
+      <button type="button" data-step="1" aria-label="Next project">${esc(FEATURED[(i + 1) % FEATURED.length].title)} →</button>
+    </div>` : ""}`;
+  document.querySelectorAll(".pager [data-step]").forEach(b => b.onclick = () => stepProject(Number(b.dataset.step)));
   if (!dlg.open) dlg.showModal();
   dlg.scrollTop = 0;
 }
+// Previous/next wraps around: past the last project comes the first again
+const stepProject = (dir) => openProject((openIndex + dir + FEATURED.length) % FEATURED.length);
+document.addEventListener("keydown", e => {
+  if (!dlg.open) return;
+  if (e.key === "ArrowRight") { e.preventDefault(); stepProject(1); }
+  if (e.key === "ArrowLeft") { e.preventDefault(); stepProject(-1); }
+});
 document.getElementById("dlgClose").onclick = () => dlg.close();
 dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });   // click on the dimmed backdrop closes it
 

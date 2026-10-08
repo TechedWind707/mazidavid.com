@@ -26,8 +26,9 @@
    tokens.css flip from that one attribute. Other scripts can listen:
      window.addEventListener("md-theme", e => e.detail.theme)
 
-   services.mazidavid.com deliberately does NOT load this file: it's
-   kept separate (it may move to its own domain).
+   services.mazidavid.com deliberately does NOT load this file, and no
+   site links to it: it's kept private for now (and may move to its own
+   domain).
    ===================================================================== */
 (function () {
   const me = document.currentScript || document.querySelector('script[src*="eco-nav"]');
@@ -71,7 +72,6 @@
     { id: "blog", label: "Blog", href: "https://blog.mazidavid.com" },
     { id: "gallery", label: "Gallery", href: "https://gallery.mazidavid.com" },
     { id: "me", label: "Me", href: "https://me.mazidavid.com" },
-    { id: "services", label: "Mazi Services", href: "https://services.mazidavid.com" },
   ];
 
   /* ---------------- styles (self-contained; works on any site) ---------------- */
