@@ -13,7 +13,7 @@ window.SITE = {
     funFact: "Mazi means \"Mr.\" in my native language.",
     location: "Halifax, Nova Scotia",
     role: "IT Programming student at NSCC",
-    oneLiner: "I build AI agents, browser and launcher extensions, and the small tools that make computers do the boring parts for people.",
+    oneLiner: "I build the tools I wish already existed, then use them myself. Mostly AI: agents, browser and launcher extensions, and anything that makes work less stressful.",
     openTo: "Open to co-op / internship placements and freelance web work.",
     email: "davidnsofor@proton.me",
     links: {
@@ -236,8 +236,8 @@ window.SITE = {
   profile: {
     photo_url: "",
     greeting: "Hi, I'm David. aka *Mazi David*",   // *stars* = the handwritten part
-    bio: "From Lagos → Dartmouth, Nova Scotia. I study IT Programming at NSCC and spend the rest of my time building agents, extensions and small tools that do the boring parts for people.",
-    roles: ["AI agents", "Raycast and Chrome extensions", "tools for students", "websites for local businesses"]
+    bio: "From Lagos → Dartmouth, Nova Scotia. I study IT Programming at NSCC, and I build the tools I wish already existed, then use them myself. This page is the unfiltered side: what I'm aiming at, what I'm stuck on, what I can't stop thinking about.",
+    roles: ["the tools I wish existed", "AI agents", "browser extensions", "launcher extensions", "things that make work less stressful"]
   },
   timeline: [
     { when_label: "2018", title: "Common Entrance, then Mena College", body: "Wrote the Common Entrance exam to move from Grade 6 at Zikino into junior high at Mena College, Lagos." },
