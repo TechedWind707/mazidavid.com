@@ -13,7 +13,7 @@ window.SITE = {
     funFact: "Mazi means \"Mr.\" in my native language.",
     location: "Halifax, Nova Scotia",
     role: "IT Programming student at NSCC",
-    oneLiner: "I build the tools I wish already existed, then use them myself. Right now I'm most interested in AI agents, browser and launcher extensions, and anything that makes work less stressful.",
+    oneLiner: "I build the tools I wish already existed. Right now I'm most interested in AI agents, browser and launcher extensions, and anything that makes work less stressful.",
     openTo: "Open to co-op / internship placements and freelance web work.",
     email: "davidnsofor@proton.me",
     links: {
