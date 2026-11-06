@@ -44,15 +44,8 @@ function matchStep(secret, code) {
   return null;
 }
 
-let ready = false;
-async function setup(sql) {
-  if (ready) return;
-  await sql`CREATE TABLE IF NOT EXISTS wow_devices (
-    device text PRIMARY KEY, email text NOT NULL, status text NOT NULL DEFAULT 'approved',
-    note text DEFAULT '', created_at timestamptz DEFAULT now(), last_seen timestamptz DEFAULT now())`;
-  await sql`CREATE TABLE IF NOT EXISTS wow_used_codes (step bigint PRIMARY KEY, device text, used_at timestamptz DEFAULT now())`;
-  ready = true;
-}
+// Tables wow_devices + wow_used_codes were created once by the owner role in Neon;
+// the site's own role (site_web) may only read/insert/update them, not create tables.
 
 export default async function handler(req, res) {
   try { return await run(req, res); }
@@ -65,7 +58,7 @@ async function run(req, res) {
   if (!body) return send(res, 400, { error: "Expected JSON" });
   const device = String(body.device || "").slice(0, 80);
   if (!/^[A-Za-z0-9_-]{6,80}$/.test(device)) return send(res, 400, { error: "Bad device id" });
-  const sql = db(); await setup(sql);
+  const sql = db();
 
   if (body.action === "check") {
     const rows = await sql`UPDATE wow_devices SET last_seen = now() WHERE device = ${device} RETURNING status`;
