@@ -55,6 +55,11 @@ async function setup(sql) {
 }
 
 export default async function handler(req, res) {
+  try { return await run(req, res); }
+  catch (e) { console.error("wow api", e); return send(res, 500, { error: "server error", detail: String(e && e.message || e).slice(0, 160) }); }
+}
+
+async function run(req, res) {
   if (req.method !== "POST") return send(res, 405, { error: "POST only" });
   const body = jsonBody(req, 2000);
   if (!body) return send(res, 400, { error: "Expected JSON" });
