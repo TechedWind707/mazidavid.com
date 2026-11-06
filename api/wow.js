@@ -76,7 +76,12 @@ async function run(req, res) {
   const sql = db();
 
   if (body.action === "check") {
-    const rows = await sql`UPDATE wow_devices SET last_seen = now() WHERE device = ${device} RETURNING status`;
+    const rows = await sql`UPDATE wow_devices SET last_seen = now() WHERE device = ${device} RETURNING status, email, approved_mailed`;
+    // first check after the admin approved this phone -> tell the person by email (once)
+    if (rows.length && rows[0].status === "approved" && !rows[0].approved_mailed) {
+      const sent = await mail(rows[0].email, "Your WoW Autopilot access is approved", "Good news: your WoW Autopilot access has been approved.\n\nOpen the app and press Play.");
+      if (sent) await sql`UPDATE wow_devices SET approved_mailed = true WHERE device = ${device}`;
+    }
     return send(res, 200, { status: rows.length ? rows[0].status : "unknown" });
   }
 
@@ -99,7 +104,7 @@ async function run(req, res) {
               ON CONFLICT (device) DO UPDATE SET email = ${email}, status = 'email_pending',
                 email_code_hash = ${hash(ecode)}, email_code_exp = now() + interval '15 minutes', email_tries = 0, last_seen = now()`;
     const ok = await mail(email, "Your WoW Autopilot email code",
-      `Your code is ${ecode}\n\nType it in WoW Autopilot to confirm this email. It works for 15 minutes.\nIf you didn't ask for this, ignore this email.`);
+      `Your code is ${ecode}\n\nType it in WoW Autopilot to confirm this email. After that, the admin reviews your request. It works for 15 minutes.\nIf you didn't ask for this, ignore this email.`);
     return send(res, 200, { status: ok ? "email_sent" : "email_failed" });
   }
 
